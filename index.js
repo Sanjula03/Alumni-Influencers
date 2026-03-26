@@ -1,0 +1,108 @@
+// index.js - main entry point
+'use strict'
+
+require('dotenv').config();
+
+var express = require('express');
+var session = require('express-session');
+var helmet = require('helmet');
+var cors = require('cors');
+var path = require('node:path');
+
+var { connectDB } = require('./db');
+
+var app = module.exports = express();
+
+// connect to mysql
+connectDB();
+
+// load model associations
+require('./models/index');
+
+// security
+app.use(helmet());
+app.use(cors({
+  origin: process.env.APP_URL || 'http://localhost:3000',
+  credentials: true
+}));
+
+// rate limiting
+var { generalLimiter } = require('./middleware/rateLimiter');
+app.use(generalLimiter);
+
+// serve static files
+app.use(express.static(path.join(__dirname, 'public')));
+
+// parse request bodies
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// xss sanitisation for request body
+app.use(function(req, res, next) {
+  if (req.body && typeof req.body === 'object') {
+    var sanitize = function(obj) {
+      for (var key in obj) {
+        if (typeof obj[key] === 'string') {
+          obj[key] = obj[key].replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+          sanitize(obj[key]);
+        }
+      }
+    };
+    sanitize(req.body);
+  }
+  next();
+});
+
+// session
+app.use(session({
+  resave: false,
+  saveUninitialized: false,
+  secret: process.env.SESSION_SECRET || 'change-this-in-production',
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: 'lax'
+  }
+}));
+
+// session messages helper
+app.response.message = function(msg) {
+  var sess = this.req.session;
+  sess.messages = sess.messages || [];
+  sess.messages.push(msg);
+  return this;
+};
+
+app.use(function(req, res, next) {
+  var msgs = req.session.messages || [];
+  res.locals.messages = msgs;
+  res.locals.hasMessages = !!msgs.length;
+  next();
+  req.session.messages = [];
+});
+
+// load controllers via boot.js
+require('./lib/boot')(app, { verbose: !module.parent });
+
+// start cron jobs
+var { initCronJobs } = require('./utils/cronJobs');
+initCronJobs();
+
+// error handler
+app.use(function(err, req, res, next) {
+  if (!module.parent) console.error(err.stack);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// 404
+app.use(function(req, res) {
+  res.status(404).json({ error: 'Not found', url: req.originalUrl });
+});
+
+if (!module.parent) {
+  var PORT = process.env.PORT || 3000;
+  app.listen(PORT);
+  console.log('Express started on port ' + PORT);
+}
