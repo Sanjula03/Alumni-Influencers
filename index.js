@@ -83,6 +83,14 @@ app.use(function(req, res, next) {
   req.session.messages = [];
 });
 
+// swagger api docs
+var swaggerUi = require('swagger-ui-express');
+var swaggerSpec = require('./swagger');
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Alumni Influencers API Docs'
+}));
+
 // load controllers via boot.js
 require('./lib/boot')(app, { verbose: !module.parent });
 
