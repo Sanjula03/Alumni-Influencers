@@ -91,7 +91,18 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'Alumni Influencers API Docs'
 }));
 
-// load controllers via boot.js
+// mount routes
+var authRoutes = require('./routes/authRoutes');
+var profileRoutes = require('./routes/profileRoutes');
+var bidRoutes = require('./routes/bidRoutes');
+var apiRoutes = require('./routes/apiRoutes');
+
+app.use('/', authRoutes);
+app.use('/', profileRoutes);
+app.use('/', bidRoutes);
+app.use('/', apiRoutes);
+
+// load main controller via boot.js (lecturer's boilerplate pattern)
 require('./lib/boot')(app, { verbose: !module.parent });
 
 // start cron jobs
