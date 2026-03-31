@@ -66,6 +66,22 @@ exports.setup = function(app) {
         featuredProfile = await Profile.findOne({ where: { user_id: featured.user_id } });
       }
 
+      // tomorrows slot info
+      var tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      var tomorrowStr = tomorrow.toISOString().split('T')[0];
+      var tomorrowFeatured = await FeaturedAlumni.findOne({ where: { featured_date: tomorrowStr } });
+      var tomorrowSlot = null;
+      if (tomorrowFeatured) {
+        var tp = await Profile.findOne({ where: { user_id: tomorrowFeatured.user_id } });
+        tomorrowSlot = { date: tomorrowStr, status: 'taken', winner: tp ? tp.first_name + ' ' + tp.last_name : 'Unknown' };
+      } else {
+        tomorrowSlot = { date: tomorrowStr, status: 'available', message: 'No winner yet - place your bid!' };
+      }
+
+      // appearance count (total wins all time)
+      var totalAppearances = await FeaturedAlumni.count({ where: { user_id: userId } });
+
       res.json({
         success: true,
         data: {
@@ -74,6 +90,8 @@ exports.setup = function(app) {
           monthlyWins: monthlyWins,
           maxWins: maxWins,
           remainingSlots: remaining,
+          totalAppearances: totalAppearances,
+          tomorrowSlot: tomorrowSlot,
           history: history,
           featuredToday: featured,
           featuredProfile: featuredProfile
@@ -152,6 +170,28 @@ exports.setup = function(app) {
     } catch (error) {
       console.error('Bid history error:', error);
       res.status(500).json({ success: false, error: 'Failed to fetch history' });
+    }
+  });
+
+  // cancel bid (only if still pending)
+  app.delete('/bid', isAuthenticated, async function(req, res) {
+    try {
+      var userId = req.session.userId;
+      var today = new Date().toISOString().split('T')[0];
+
+      var bid = await Bid.findOne({
+        where: { user_id: userId, bid_date: today, status: 'pending' }
+      });
+
+      if (!bid) {
+        return res.status(404).json({ success: false, error: 'No active bid found for today' });
+      }
+
+      await bid.destroy();
+      res.json({ success: true, message: 'Bid cancelled successfully' });
+    } catch (error) {
+      console.error('Cancel bid error:', error);
+      res.status(500).json({ success: false, error: 'Failed to cancel bid' });
     }
   });
 };

@@ -63,7 +63,40 @@ exports.setup = function(app) {
       if (!profile) {
         return res.status(404).json({ success: false, error: 'Profile not found. Create one first.' });
       }
-      res.json({ success: true, data: profile });
+
+      // calculate profile completion status
+      var p = profile.get({ plain: true });
+      var total = 9;
+      var filled = 0;
+      if (p.first_name) filled++;
+      if (p.last_name) filled++;
+      if (p.biography) filled++;
+      if (p.linkedin_url) filled++;
+      if (p.profile_image) filled++;
+      if (p.degrees && p.degrees.length > 0) filled++;
+      if (p.certifications && p.certifications.length > 0) filled++;
+      if (p.licences && p.licences.length > 0) filled++;
+      if (p.courses && p.courses.length > 0) filled++;
+
+      var completionPercent = Math.round((filled / total) * 100);
+      var missing = [];
+      if (!p.biography) missing.push('biography');
+      if (!p.linkedin_url) missing.push('linkedInUrl');
+      if (!p.profile_image) missing.push('profileImage');
+      if (!p.degrees || p.degrees.length === 0) missing.push('degrees');
+      if (!p.certifications || p.certifications.length === 0) missing.push('certifications');
+      if (!p.licences || p.licences.length === 0) missing.push('licences');
+      if (!p.courses || p.courses.length === 0) missing.push('courses');
+
+      res.json({
+        success: true,
+        data: profile,
+        completionStatus: {
+          percentage: completionPercent,
+          missingFields: missing,
+          isComplete: completionPercent === 100
+        }
+      });
     } catch (error) {
       console.error('Get profile error:', error);
       res.status(500).json({ success: false, error: 'Failed to fetch profile' });
