@@ -1,4 +1,4 @@
-// cron jobs - automated daily winner selection
+// cron jobs - automated daily winner selection and appearance tracking
 const cron = require('node-cron');
 const { Op } = require('sequelize');
 const Bid = require('../models/Bid');
@@ -7,9 +7,9 @@ const User = require('../models/User');
 const { sendBidNotificationEmail } = require('./email');
 
 const initCronJobs = () => {
-  // runs every day at midnight
-  cron.schedule('0 0 * * *', async () => {
-    console.log('=== Running Daily Winner Selection ===');
+  // runs every day at 6 PM (18:00) - select winner and update appearance count
+  cron.schedule('0 18 * * *', async () => {
+    console.log('=== Running Daily Winner Selection (6 PM) ===');
 
     try {
       const today = new Date().toISOString().split('T')[0];
@@ -44,7 +44,7 @@ const initCronJobs = () => {
         }
       );
 
-      // create featured record for tomorrow
+      // create featured record for tomorrow (activates winning alumni profile)
       await FeaturedAlumni.create({
         user_id: winningBid.user_id,
         bid_id: winningBid.id,
@@ -52,7 +52,11 @@ const initCronJobs = () => {
         winning_bid_amount: winningBid.amount
       });
 
-      console.log(`Winner: User ${winningBid.user_id} with £${winningBid.amount}`);
+      // update appearance count - log total appearances for the winner
+      const totalAppearances = await FeaturedAlumni.count({
+        where: { user_id: winningBid.user_id }
+      });
+      console.log(`Winner: User ${winningBid.user_id} with £${winningBid.amount} (Total appearances: ${totalAppearances})`);
 
       // send emails to all bidders
       for (const bid of bids) {
@@ -73,7 +77,45 @@ const initCronJobs = () => {
     }
   });
 
+  // runs on the 1st of every month at midnight - reset monthly appearance counts
+  // this resets the monthly win tracking so users can bid again
+  cron.schedule('0 0 1 * *', async () => {
+    console.log('=== Monthly Appearance Count Reset ===');
+    try {
+      // no data deletion needed - monthly wins are calculated dynamically
+      // by counting FeaturedAlumni records within the current month range
+      // this log confirms the system is tracking the monthly reset cycle
+      const lastMonth = new Date();
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      const monthName = lastMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+      const monthStart = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1).toISOString().split('T')[0];
+      const monthEnd = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0).toISOString().split('T')[0];
+
+      const { sequelize } = require('../db');
+      const [results] = await sequelize.query(
+        'SELECT user_id, COUNT(*) as wins FROM featured_alumni WHERE featured_date BETWEEN ? AND ? GROUP BY user_id ORDER BY wins DESC',
+        { replacements: [monthStart, monthEnd] }
+      );
+
+      console.log(`Monthly summary for ${monthName}:`);
+      if (results.length === 0) {
+        console.log('  No winners last month.');
+      } else {
+        for (const r of results) {
+          console.log(`  User ${r.user_id}: ${r.wins} win(s)`);
+        }
+      }
+      console.log('Monthly counts automatically reset for new month.');
+      console.log('=== Monthly Reset Complete ===');
+    } catch (error) {
+      console.error('Monthly reset error:', error);
+    }
+  });
+
   console.log('Cron job scheduled: Daily winner selection at midnight');
+  console.log('Cron job scheduled: Monthly appearance count reset on 1st');
 };
 
 module.exports = { initCronJobs };
+
