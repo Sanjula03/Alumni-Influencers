@@ -9,7 +9,7 @@ var options = {
       version: '1.0.0',
       description: 'REST API for the Alumni Influencers platform. Alumni bid for daily featured slots and their profiles are served to the AR client.',
       contact: {
-        name: 'Sanjula Sumanth'
+        name: 'Sanjula Sunath'
       }
     },
     servers: [
@@ -37,7 +37,7 @@ var options = {
           type: 'object',
           properties: {
             id: { type: 'integer', example: 1 },
-            email: { type: 'string', example: 'sanjula@eastminster.ac.uk' },
+            email: { type: 'string', example: 'w1234567@my.westminster.ac.uk' },
             is_verified: { type: 'boolean', example: true },
             created_at: { type: 'string', format: 'date-time' },
             updated_at: { type: 'string', format: 'date-time' }
@@ -48,8 +48,8 @@ var options = {
           properties: {
             id: { type: 'integer', example: 1 },
             user_id: { type: 'integer', example: 1 },
-            first_name: { type: 'string', example: 'Sanjula' },
-            last_name: { type: 'string', example: 'Sumanth' },
+            first_name: { type: 'string', example: 'John' },
+            last_name: { type: 'string', example: 'Smith' },
             biography: { type: 'string', example: 'Software engineering graduate from University of Eastminster' },
             linkedin_url: { type: 'string', example: 'https://linkedin.com/in/sanjula' },
             profile_image: { type: 'string', example: '/uploads/1-1711600000.jpg' },
@@ -358,17 +358,25 @@ var options = {
       '/profile/me': {
         get: {
           tags: ['Profiles'],
-          summary: 'Get my profile',
-          description: 'Returns the logged in users profile with all sub-entries.',
+          summary: 'Get my profile with completion status',
+          description: 'Returns the logged in users profile with all sub-entries and a completion status showing percentage filled and missing fields.',
           security: [{ SessionAuth: [] }],
           responses: {
             '200': {
-              description: 'Profile data',
+              description: 'Profile data with completion status',
               content: { 'application/json': { schema: {
                 type: 'object',
                 properties: {
                   success: { type: 'boolean', example: true },
-                  data: { '$ref': '#/components/schemas/Profile' }
+                  data: { '$ref': '#/components/schemas/Profile' },
+                  completionStatus: {
+                    type: 'object',
+                    properties: {
+                      percentage: { type: 'integer', example: 56, description: 'Profile completion percentage' },
+                      missingFields: { type: 'array', items: { type: 'string' }, example: ['biography', 'linkedInUrl', 'profileImage'] },
+                      isComplete: { type: 'boolean', example: false }
+                    }
+                  }
                 }
               }}}
             },
@@ -506,6 +514,17 @@ var options = {
                       monthlyWins: { type: 'integer', example: 1 },
                       maxWins: { type: 'integer', example: 3, description: '3 normally, 4 if attended an event' },
                       remainingSlots: { type: 'integer', example: 2 },
+                      totalAppearances: { type: 'integer', example: 5, description: 'Total all-time featured appearances' },
+                      tomorrowSlot: {
+                        type: 'object',
+                        properties: {
+                          date: { type: 'string', format: 'date' },
+                          status: { type: 'string', enum: ['available', 'taken'] },
+                          winner: { type: 'string', nullable: true },
+                          message: { type: 'string', nullable: true }
+                        },
+                        description: 'Tomorrows featured slot availability'
+                      },
                       history: { type: 'array', items: { '$ref': '#/components/schemas/Bid' } },
                       featuredToday: { '$ref': '#/components/schemas/FeaturedAlumni', nullable: true },
                       featuredProfile: { '$ref': '#/components/schemas/Profile', nullable: true }
@@ -554,6 +573,16 @@ var options = {
             }}}},
             '400': { description: 'Invalid amount or bid decrease attempt', content: { 'application/json': { schema: { '$ref': '#/components/schemas/Error' } } } },
             '403': { description: 'Monthly limit reached', content: { 'application/json': { schema: { '$ref': '#/components/schemas/Error' } } } }
+          }
+        },
+        delete: {
+          tags: ['Bidding'],
+          summary: 'Cancel todays bid',
+          description: 'Cancels the current pending bid for today. Only works if the bid status is still pending.',
+          security: [{ SessionAuth: [] }],
+          responses: {
+            '200': { description: 'Bid cancelled', content: { 'application/json': { schema: { '$ref': '#/components/schemas/Success' } } } },
+            '404': { description: 'No active bid found', content: { 'application/json': { schema: { '$ref': '#/components/schemas/Error' } } } }
           }
         }
       },
