@@ -121,6 +121,7 @@ router.post('/auth/login', authLimiter, loginValidation, async function(req, res
 router.post('/auth/logout', function(req, res) {
   req.session.destroy(function(err) {
     if (err) console.error('Logout error:', err);
+    res.clearCookie('connect.sid');
     res.json({ success: true, message: 'Logged out' });
   });
 });

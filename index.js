@@ -76,11 +76,15 @@ app.response.message = function(msg) {
 };
 
 app.use(function(req, res, next) {
-  var msgs = req.session.messages || [];
-  res.locals.messages = msgs;
-  res.locals.hasMessages = !!msgs.length;
+  if (req.session) {
+    var msgs = req.session.messages || [];
+    res.locals.messages = msgs;
+    res.locals.hasMessages = !!msgs.length;
+    if (msgs.length > 0) {
+      req.session.messages = [];
+    }
+  }
   next();
-  req.session.messages = [];
 });
 
 // swagger api docs

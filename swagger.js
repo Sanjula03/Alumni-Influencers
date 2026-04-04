@@ -421,7 +421,7 @@ var options = {
                   required: ['firstName', 'lastName'],
                   properties: {
                     firstName: { type: 'string', example: 'Sanjula' },
-                    lastName: { type: 'string', example: 'Sumanth' },
+                    lastName: { type: 'string', example: 'Sunath' },
                     biography: { type: 'string', example: 'SE graduate from University of Eastminster' },
                     linkedInUrl: { type: 'string', example: 'https://linkedin.com/in/sanjula' },
                     degrees: { type: 'array', items: {
