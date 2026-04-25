@@ -1,0 +1,91 @@
+<style>
+  .top-nav {
+    height: var(--top-nav-height);
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+  }
+  
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .nav-brand svg {
+    fill: var(--text-main);
+    width: 20px;
+    height: 20px;
+  }
+
+  .nav-menu {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .nav-item a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.15s;
+  }
+
+  .nav-item a:hover, .nav-item.active a {
+    color: var(--text-main);
+  }
+
+  .nav-item svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+  }
+</style>
+
+<nav class="top-nav">
+  <div class="nav-brand">
+    <svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3z"/></svg>
+    Alumni Influencers
+  </div>
+  
+  <ul class="nav-menu">
+    <li class="nav-item"><a href="/dashboard">Dashboard</a></li>
+    <li class="nav-item"><a href="/dashboard/alumni">Browse</a></li>
+    <li class="nav-item"><a href="/bids">Bidding</a></li>
+    <li class="nav-item"><a href="/analytics/charts">Analytics</a></li>
+    <li class="nav-item"><a href="/export">Reports</a></li>
+    <li class="nav-item"><a href="/api-keys">API Keys</a></li>
+  </ul>
+  
+  <div class="nav-actions">
+    <form action="/auth/logout" method="POST" style="margin:0;">
+      <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+      <button type="submit" class="btn" style="border: 1px solid var(--border-color); background: transparent; color: var(--text-main);">
+        Logout
+      </button>
+    </form>
+  </div>
+</nav>

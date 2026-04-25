@@ -1,0 +1,70 @@
+<%- include('../partials/header') %>
+<%- include('../partials/sidebar') %>
+
+<div class="main-content with-sidebar">
+  <div class="top-header">
+    <h2>Alumni Directory</h2>
+  </div>
+
+  <%- include('../partials/flashData') %>
+
+  <!-- Filters -->
+  <div class="card">
+    <form method="GET" action="/dashboard/alumni" style="display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap;">
+      <div>
+        <label>Programme</label>
+        <input type="text" name="programme" value="<%= query.programme || '' %>" placeholder="e.g. Computer Science" style="width: 200px;">
+      </div>
+      <div>
+        <label>Graduation Year</label>
+        <input type="number" name="year" value="<%= query.year || '' %>" placeholder="YYYY" style="width:100px;">
+      </div>
+      <div>
+        <label>Industry Sector</label>
+        <input type="text" name="sector" value="<%= query.sector || '' %>" placeholder="e.g. Technology" style="width: 150px;">
+      </div>
+      <div style="display:flex; gap: 8px;">
+        <button type="submit" class="btn btn-primary" style="display:flex; align-items:center; gap:6px;">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg> Apply
+        </button>
+        <a href="/dashboard/alumni" class="btn" style="border:1px solid var(--border-color); color:var(--text-muted); background:#ffffff; display:flex; align-items:center; gap:6px;">
+          <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg> Clear
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden;">
+    <table style="width:100%; border-collapse:collapse; text-align:left;">
+      <thead style="background-color: #f9fafb; border-bottom:1px solid var(--border-color); color: #4b5563; font-size: 12px; font-weight: 500; text-transform: uppercase;">
+        <tr>
+          <th style="padding:12px 16px;">Name</th>
+          <th style="padding:12px 16px;">Programme</th>
+          <th style="padding:12px 16px;">Graduation</th>
+          <th style="padding:12px 16px;">LinkedIn</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if(profiles.length === 0) { %>
+          <tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No alumni found matching criteria.</td></tr>
+        <% } %>
+        <% profiles.forEach(function(p) { %>
+          <tr style="border-bottom:1px solid var(--border-color);">
+            <td style="padding:15px 20px; font-weight:500;"><%= p.first_name %> <%= p.last_name %></td>
+            <td style="padding:15px 20px;"><%= p.programme || '-' %></td>
+            <td style="padding:15px 20px;"><%= p.graduation_year || '-' %></td>
+            <td style="padding:15px 20px;">
+              <% if(p.linkedin_url) { %>
+                <a href="<%= p.linkedin_url %>" target="_blank" style="color:#000000; border: 1px solid #d1d5db; background:#ffffff; padding: 4px 12px; border-radius: 4px; text-decoration:none; font-size: 12px; font-weight: 500; transition: all 0.15s;" onmouseover="this.style.background='#f3f4f6'; this.style.borderColor='#9ca3af';" onmouseout="this.style.background='#ffffff'; this.style.borderColor='#d1d5db';">Profile ↗</a>
+              <% } else { %>
+                <span style="color:#9ca3af;">None</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

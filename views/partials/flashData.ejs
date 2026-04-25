@@ -1,0 +1,9 @@
+<% if (hasMessages) { %>
+  <div class="flash-messages">
+    <% messages.forEach(function(msg) { %>
+      <div class="alert alert-<%= msg.type || 'error' %>">
+        <%= msg.text || msg %>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
