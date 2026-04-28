@@ -10,98 +10,11 @@ var FeaturedAlumni = require('../models/FeaturedAlumni');
 var { Profile } = require('../models/Profile');
 var { isAuthenticated } = require('../middleware/auth');
 
-// GET /bids - get bidding page data
-router.get('/bids', isAuthenticated, async function(req, res) {
-  try {
-    var userId = req.session.userId;
-    var today = new Date().toISOString().split('T')[0];
+// GET /bids is now handled by the SSR controller in controllers/bids/index.js
+// which renders the bidding page with EJS templates.
+// The JSON API endpoints below (POST /bid, DELETE /bid, GET /bid/history) remain
+// for Swagger documentation and external API consumption.
 
-    var todaysBid = await Bid.findOne({
-      where: { user_id: userId, bid_date: today }
-    });
-
-    // blind status check
-    var bidStatus = null;
-    if (todaysBid && todaysBid.status === 'pending') {
-      var highest = await Bid.findOne({
-        where: { bid_date: today, status: 'pending' },
-        order: [['amount', 'DESC']]
-      });
-      if (highest) {
-        bidStatus = highest.user_id === userId ? 'winning' : 'losing';
-      }
-    }
-
-    // monthly stats
-    var now = new Date();
-    var monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    var monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
-
-    var monthlyWins = await FeaturedAlumni.count({
-      where: { user_id: userId, featured_date: { [Op.between]: [monthStart, monthEnd] } }
-    });
-
-    // event attendance bonus
-    var { sequelize } = require('../db');
-    var [attendResults] = await sequelize.query(
-      'SELECT ea.id FROM event_attendees ea JOIN events e ON ea.event_id = e.id WHERE ea.user_id = ? AND e.date BETWEEN ? AND ? LIMIT 1',
-      { replacements: [userId, monthStart, monthEnd] }
-    );
-    var attended = attendResults.length > 0;
-
-    var maxWins = attended ? 4 : 3;
-    var remaining = Math.max(0, maxWins - monthlyWins);
-
-    // recent history
-    var history = await Bid.findAll({
-      where: { user_id: userId },
-      order: [['bid_date', 'DESC']],
-      limit: 20
-    });
-
-    // todays featured
-    var featured = await FeaturedAlumni.findOne({ where: { featured_date: today } });
-    var featuredProfile = null;
-    if (featured) {
-      featuredProfile = await Profile.findOne({ where: { user_id: featured.user_id } });
-    }
-
-    // tomorrows slot info
-    var tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    var tomorrowStr = tomorrow.toISOString().split('T')[0];
-    var tomorrowFeatured = await FeaturedAlumni.findOne({ where: { featured_date: tomorrowStr } });
-    var tomorrowSlot = null;
-    if (tomorrowFeatured) {
-      var tp = await Profile.findOne({ where: { user_id: tomorrowFeatured.user_id } });
-      tomorrowSlot = { date: tomorrowStr, status: 'taken', winner: tp ? tp.first_name + ' ' + tp.last_name : 'Unknown' };
-    } else {
-      tomorrowSlot = { date: tomorrowStr, status: 'available', message: 'No winner yet - place your bid!' };
-    }
-
-    // appearance count
-    var totalAppearances = await FeaturedAlumni.count({ where: { user_id: userId } });
-
-    res.json({
-      success: true,
-      data: {
-        todaysBid: todaysBid,
-        bidStatus: bidStatus,
-        monthlyWins: monthlyWins,
-        maxWins: maxWins,
-        remainingSlots: remaining,
-        totalAppearances: totalAppearances,
-        tomorrowSlot: tomorrowSlot,
-        history: history,
-        featuredToday: featured,
-        featuredProfile: featuredProfile
-      }
-    });
-  } catch (error) {
-    console.error('Get bids error:', error);
-    res.status(500).json({ success: false, error: 'Failed to fetch bid data' });
-  }
-});
 
 // POST /bid - place or update bid
 router.post('/bid', isAuthenticated, async function(req, res) {

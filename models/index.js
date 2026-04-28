@@ -5,6 +5,7 @@ const Bid = require('./Bid');
 const FeaturedAlumni = require('./FeaturedAlumni');
 const { ApiClient, ApiUsageLog } = require('./ApiClient');
 const { Event, EventAttendee } = require('./Event');
+const SponsorshipOffer = require('./SponsorshipOffer');
 
 // user <-> profile (one to one)
 User.hasOne(Profile, { foreignKey: 'user_id', as: 'profile', onDelete: 'CASCADE' });
@@ -26,11 +27,18 @@ FeaturedAlumni.belongsTo(Bid, { foreignKey: 'bid_id', as: 'bid' });
 User.hasMany(ApiClient, { foreignKey: 'created_by', as: 'apiClients', onDelete: 'CASCADE' });
 ApiClient.belongsTo(User, { foreignKey: 'created_by', as: 'creator' });
 
+// sponsorship offers
+User.hasMany(SponsorshipOffer, { foreignKey: 'sponsor_id', as: 'sentOffers' });
+User.hasMany(SponsorshipOffer, { foreignKey: 'alumnus_id', as: 'receivedOffers' });
+SponsorshipOffer.belongsTo(User, { foreignKey: 'sponsor_id', as: 'sponsor' });
+SponsorshipOffer.belongsTo(User, { foreignKey: 'alumnus_id', as: 'alumnus' });
+
 module.exports = {
   User,
   Profile, Degree, Certification, Licence, Course, Employment,
   Bid,
   FeaturedAlumni,
   ApiClient, ApiUsageLog,
-  Event, EventAttendee
+  Event, EventAttendee,
+  SponsorshipOffer
 };

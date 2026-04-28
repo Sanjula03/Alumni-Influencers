@@ -24,6 +24,11 @@ const User = sequelize.define('User', {
       len: { args: [8, 255], msg: 'Password must be at least 8 characters' }
     }
   },
+  role: {
+    type: DataTypes.ENUM('alumnus', 'developer', 'admin', 'sponsor'),
+    defaultValue: 'alumnus',
+    allowNull: false
+  },
   is_verified: {
     type: DataTypes.BOOLEAN,
     defaultValue: false

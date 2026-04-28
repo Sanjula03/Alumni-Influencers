@@ -20,6 +20,20 @@ exports.setup = function(app) {
         where: { user_id: userId, bid_date: today }
       });
 
+      // Calculate Sponsorship Budget - Requirement 2
+      const { Certification, Licence, Course } = require('../../models/Profile');
+      const profile = await Profile.findOne({ where: { user_id: userId } });
+      
+      let totalSponsorship = 0;
+      if (profile) {
+        const certs = await Certification.findAll({ where: { profile_id: profile.id } });
+        const licences = await Licence.findAll({ where: { profile_id: profile.id } });
+        const courses = await Course.findAll({ where: { profile_id: profile.id } });
+        
+        const sum = (arr) => arr.reduce((acc, item) => acc + parseFloat(item.sponsor_amount || 0), 0);
+        totalSponsorship = sum(certs) + sum(licences) + sum(courses);
+      }
+
       // blind status check
       var bidStatus = null;
       if (todaysBid && todaysBid.status === 'pending') {
@@ -31,6 +45,9 @@ exports.setup = function(app) {
           bidStatus = highest.user_id === userId ? 'winning' : 'losing';
         }
       }
+
+      // Count total bidders for today metric
+      const totalBiddersToday = await Bid.count({ where: { bid_date: today } });
 
       // monthly stats
       var now = new Date();
@@ -87,14 +104,18 @@ exports.setup = function(app) {
         data: {
           todaysBid: todaysBid,
           bidStatus: bidStatus,
+          totalSponsorship: totalSponsorship,
+          totalBiddersToday: totalBiddersToday,
           monthlyWins: monthlyWins,
           maxWins: maxWins,
           remainingSlots: remaining,
+          attended: attended,
           totalAppearances: totalAppearances,
           tomorrowSlot: tomorrowSlot,
           history: history,
           featuredToday: featured,
-          featuredProfile: featuredProfile
+          featuredProfile: featuredProfile,
+          today: today
         }
       });
     } catch (error) {
@@ -112,6 +133,27 @@ exports.setup = function(app) {
 
       if (!amount || amount <= 0) {
         return res.status(400).json({ success: false, error: 'Bid amount must be greater than 0' });
+      }
+
+      // Calculate Sponsorship Budget - Requirement 2 Validation
+      const { Certification, Licence, Course } = require('../../models/Profile');
+      const profile = await Profile.findOne({ where: { user_id: userId } });
+      
+      let totalSponsorship = 0;
+      if (profile) {
+        const certs = await Certification.findAll({ where: { profile_id: profile.id } });
+        const licences = await Licence.findAll({ where: { profile_id: profile.id } });
+        const courses = await Course.findAll({ where: { profile_id: profile.id } });
+        
+        const sum = (arr) => arr.reduce((acc, item) => acc + parseFloat(item.sponsor_amount || 0), 0);
+        totalSponsorship = sum(certs) + sum(licences) + sum(courses);
+      }
+
+      if (amount > totalSponsorship) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'Insufficient sponsorship funds. Your total budget from endorsements is £' + totalSponsorship.toFixed(2) 
+        });
       }
 
       // check monthly limit

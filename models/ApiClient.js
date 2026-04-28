@@ -22,6 +22,10 @@ const ApiClient = sequelize.define('ApiClient', {
     allowNull: false,
     references: { model: 'users', key: 'id' }
   },
+  permissions: {
+    type: DataTypes.JSON,
+    defaultValue: []
+  },
   is_revoked: {
     type: DataTypes.BOOLEAN,
     defaultValue: false

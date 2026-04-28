@@ -132,6 +132,12 @@ exports.setup = function(app) {
       var { firstName, lastName, biography, linkedInUrl,
         degrees, certifications, licences, courses, employmentHistory } = req.body;
 
+      try { if (typeof degrees === 'string') degrees = JSON.parse(degrees); } catch(e){}
+      try { if (typeof certifications === 'string') certifications = JSON.parse(certifications); } catch(e){}
+      try { if (typeof licences === 'string') licences = JSON.parse(licences); } catch(e){}
+      try { if (typeof courses === 'string') courses = JSON.parse(courses); } catch(e){}
+      try { if (typeof employmentHistory === 'string') employmentHistory = JSON.parse(employmentHistory); } catch(e){}
+
       if (!firstName || !lastName) {
         return res.status(400).json({ success: false, error: 'First name and last name are required' });
       }
@@ -264,6 +270,78 @@ exports.setup = function(app) {
     } catch (error) {
       console.error('Delete entry error:', error);
       res.status(500).json({ success: false, error: 'Failed to delete entry' });
+    }
+  });
+
+  // --- Sponsorship Routes ---
+  // POST /sponsorship/offer - make an offer to an alumnus for a specific course/cert
+  app.post('/sponsorship/offer', isAuthenticated, async function(req, res) {
+    try {
+      if (req.session.userRole !== 'sponsor' && req.session.userRole !== 'admin') {
+        return res.status(403).json({ success: false, error: 'Only sponsors can make offers' });
+      }
+
+      const { alumnusId, credentialType, credentialId, amount, message } = req.body;
+      const { SponsorshipOffer } = require('../../models');
+
+      // Verify the credential exists for the alumnus
+      const Model = { certification: Certification, licence: Licence, course: Course }[credentialType];
+      if (!Model) return res.status(400).json({ success: false, error: 'Invalid credential type' });
+
+      const profile = await Profile.findOne({ where: { user_id: alumnusId } });
+      if (!profile) return res.status(404).json({ success: false, error: 'Alumnus profile not found' });
+
+      const credential = await Model.findOne({ where: { id: credentialId, profile_id: profile.id } });
+      if (!credential) return res.status(404).json({ success: false, error: 'Credential not found on this profile' });
+
+      const offer = await SponsorshipOffer.create({
+        sponsor_id: req.session.userId,
+        alumnus_id: alumnusId,
+        credential_type: credentialType,
+        credential_id: credentialId,
+        amount,
+        message,
+        status: 'pending'
+      });
+
+      res.status(201).json({ success: true, message: 'Sponsorship offer sent successfully', data: offer });
+    } catch (error) {
+      console.error('Sponsorship offer error:', error);
+      res.status(500).json({ success: false, error: 'Failed to send offer' });
+    }
+  });
+
+  // GET /sponsorship/received - alumni sees offers sent to them
+  app.get('/sponsorship/received', isAuthenticated, async function(req, res) {
+    try {
+      const { SponsorshipOffer, User } = require('../../models');
+      const offers = await SponsorshipOffer.findAll({
+        where: { alumnus_id: req.session.userId },
+        include: [{ model: User, as: 'sponsor', attributes: ['email'] }],
+        order: [['createdAt', 'DESC']]
+      });
+      res.json({ success: true, data: offers });
+    } catch (error) {
+      console.error('Get received offers error:', error);
+      res.status(500).json({ success: false, error: 'Failed to fetch offers' });
+    }
+  });
+
+  // POST /sponsorship/accept/:id - alumnus accepts an offer
+  app.post('/sponsorship/accept/:id', isAuthenticated, async function(req, res) {
+    try {
+      const { SponsorshipOffer } = require('../../models');
+      const offer = await SponsorshipOffer.findOne({
+        where: { id: req.params.id, alumnus_id: req.session.userId, status: 'pending' }
+      });
+
+      if (!offer) return res.status(404).json({ success: false, error: 'Offer not found or already processed' });
+
+      await offer.update({ status: 'accepted' });
+      res.json({ success: true, message: 'Offer accepted! The funds will be available for your next bid.' });
+    } catch (error) {
+      console.error('Accept offer error:', error);
+      res.status(500).json({ success: false, error: 'Failed to accept offer' });
     }
   });
 };

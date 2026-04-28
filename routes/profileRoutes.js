@@ -129,8 +129,22 @@ router.get('/profile/:profile_id', async function(req, res) {
 // POST /profile - create or update profile
 router.post('/profile', isAuthenticated, upload.single('profileImage'), async function(req, res) {
   try {
-    var { firstName, lastName, biography, linkedInUrl,
-      degrees, certifications, licences, courses, employmentHistory } = req.body;
+    var { firstName, lastName, biography, linkedInUrl } = req.body;
+    var { degrees, certifications, licences, courses, employmentHistory } = req.body;
+
+    // Helper to parse JSON strings if needed (for AJAX compatibility)
+    const safeParse = (data) => {
+      if (typeof data === 'string') {
+        try { return JSON.parse(data); } catch (e) { return null; }
+      }
+      return data;
+    };
+
+    degrees = safeParse(degrees);
+    certifications = safeParse(certifications);
+    licences = safeParse(licences);
+    courses = safeParse(courses);
+    employmentHistory = safeParse(employmentHistory);
 
     if (!firstName || !lastName) {
       return res.status(400).json({ success: false, error: 'First name and last name are required' });
@@ -163,10 +177,13 @@ router.post('/profile', isAuthenticated, upload.single('profileImage'), async fu
     if (degrees && Array.isArray(degrees)) {
       await Degree.destroy({ where: { profile_id: profileId } });
       for (var d of degrees.filter(function(x) { return x && x.name; })) {
+        var compDate = d.completionDate ? new Date(d.completionDate) : new Date();
+        if (isNaN(compDate.getTime())) compDate = new Date();
+        
         await Degree.create({
           profile_id: profileId, name: d.name,
           institution: d.institution || '', url: d.url || null,
-          completion_date: d.completionDate || new Date()
+          completion_date: compDate
         });
       }
     }
@@ -174,10 +191,13 @@ router.post('/profile', isAuthenticated, upload.single('profileImage'), async fu
     if (certifications && Array.isArray(certifications)) {
       await Certification.destroy({ where: { profile_id: profileId } });
       for (var c of certifications.filter(function(x) { return x && x.name; })) {
+        var certDate = c.completionDate ? new Date(c.completionDate) : new Date();
+        if (isNaN(certDate.getTime())) certDate = new Date();
+
         await Certification.create({
           profile_id: profileId, name: c.name,
           issuing_body: c.issuingBody || '', url: c.url || null,
-          completion_date: c.completionDate || new Date()
+          completion_date: certDate
         });
       }
     }
@@ -185,10 +205,13 @@ router.post('/profile', isAuthenticated, upload.single('profileImage'), async fu
     if (licences && Array.isArray(licences)) {
       await Licence.destroy({ where: { profile_id: profileId } });
       for (var l of licences.filter(function(x) { return x && x.name; })) {
+        var licDate = l.completionDate ? new Date(l.completionDate) : new Date();
+        if (isNaN(licDate.getTime())) licDate = new Date();
+
         await Licence.create({
           profile_id: profileId, name: l.name,
           awarding_body: l.awardingBody || '', url: l.url || null,
-          completion_date: l.completionDate || new Date()
+          completion_date: licDate
         });
       }
     }
@@ -196,10 +219,13 @@ router.post('/profile', isAuthenticated, upload.single('profileImage'), async fu
     if (courses && Array.isArray(courses)) {
       await Course.destroy({ where: { profile_id: profileId } });
       for (var co of courses.filter(function(x) { return x && x.name; })) {
+        var courseDate = co.completionDate ? new Date(co.completionDate) : new Date();
+        if (isNaN(courseDate.getTime())) courseDate = new Date();
+
         await Course.create({
           profile_id: profileId, name: co.name,
           provider: co.provider || '', url: co.url || null,
-          completion_date: co.completionDate || new Date()
+          completion_date: courseDate
         });
       }
     }
@@ -207,10 +233,17 @@ router.post('/profile', isAuthenticated, upload.single('profileImage'), async fu
     if (employmentHistory && Array.isArray(employmentHistory)) {
       await Employment.destroy({ where: { profile_id: profileId } });
       for (var e of employmentHistory.filter(function(x) { return x && x.company; })) {
+        // Robust date handling
+        var startDate = e.startDate ? new Date(e.startDate) : new Date();
+        if (isNaN(startDate.getTime())) startDate = new Date();
+        
+        var endDate = e.endDate ? new Date(e.endDate) : null;
+        if (endDate && isNaN(endDate.getTime())) endDate = null;
+
         await Employment.create({
           profile_id: profileId, company: e.company,
-          role: e.role || '', start_date: e.startDate || new Date(),
-          end_date: e.endDate || null, is_current: e.isCurrent || false
+          role: e.role || '', start_date: startDate,
+          end_date: endDate, is_current: e.isCurrent || false
         });
       }
     }
@@ -263,6 +296,79 @@ router.delete('/profile/entry/:type/:entry_id', isAuthenticated, async function(
   } catch (error) {
     console.error('Delete entry error:', error);
     res.status(500).json({ success: false, error: 'Failed to delete entry' });
+  }
+});
+
+// --- Sponsorship Routes ---
+
+// POST /sponsorship/offer - make an offer to an alumnus for a specific course/cert
+router.post('/sponsorship/offer', isAuthenticated, async function(req, res) {
+  try {
+    if (req.session.userRole !== 'sponsor' && req.session.userRole !== 'admin') {
+      return res.status(403).json({ success: false, error: 'Only sponsors can make offers' });
+    }
+
+    const { alumnusId, credentialType, credentialId, amount, message } = req.body;
+    const { SponsorshipOffer } = require('../models');
+
+    // Verify the credential exists for the alumnus
+    const Model = { certification: Certification, licence: Licence, course: Course }[credentialType];
+    if (!Model) return res.status(400).json({ success: false, error: 'Invalid credential type' });
+
+    const profile = await Profile.findOne({ where: { user_id: alumnusId } });
+    if (!profile) return res.status(404).json({ success: false, error: 'Alumnus profile not found' });
+
+    const credential = await Model.findOne({ where: { id: credentialId, profile_id: profile.id } });
+    if (!credential) return res.status(404).json({ success: false, error: 'Credential not found on this profile' });
+
+    const offer = await SponsorshipOffer.create({
+      sponsor_id: req.session.userId,
+      alumnus_id: alumnusId,
+      credential_type: credentialType,
+      credential_id: credentialId,
+      amount,
+      message,
+      status: 'pending'
+    });
+
+    res.status(201).json({ success: true, message: 'Sponsorship offer sent successfully', data: offer });
+  } catch (error) {
+    console.error('Sponsorship offer error:', error);
+    res.status(500).json({ success: false, error: 'Failed to send offer' });
+  }
+});
+
+// GET /sponsorship/received - alumni sees offers sent to them
+router.get('/sponsorship/received', isAuthenticated, async function(req, res) {
+  try {
+    const { SponsorshipOffer, User } = require('../models');
+    const offers = await SponsorshipOffer.findAll({
+      where: { alumnus_id: req.session.userId },
+      include: [{ model: User, as: 'sponsor', attributes: ['email'] }],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json({ success: true, data: offers });
+  } catch (error) {
+    console.error('Get received offers error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch offers' });
+  }
+});
+
+// POST /sponsorship/accept/:id - alumnus accepts an offer
+router.post('/sponsorship/accept/:id', isAuthenticated, async function(req, res) {
+  try {
+    const { SponsorshipOffer } = require('../models');
+    const offer = await SponsorshipOffer.findOne({
+      where: { id: req.params.id, alumnus_id: req.session.userId, status: 'pending' }
+    });
+
+    if (!offer) return res.status(404).json({ success: false, error: 'Offer not found or already processed' });
+
+    await offer.update({ status: 'accepted' });
+    res.json({ success: true, message: 'Offer accepted! The funds will be available for your next bid.' });
+  } catch (error) {
+    console.error('Accept offer error:', error);
+    res.status(500).json({ success: false, error: 'Failed to accept offer' });
   }
 });
 

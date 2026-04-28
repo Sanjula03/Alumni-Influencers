@@ -10,7 +10,7 @@ var { generateToken } = require('../utils/tokenGenerator');
 var { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
 var { Op } = require('sequelize');
 var { authLimiter } = require('../middleware/rateLimiter');
-var { isAuthenticated } = require('../middleware/auth');
+var { isAuthenticated, isGuest } = require('../middleware/auth');
 
 // validation rules
 var registerValidation = [
@@ -27,28 +27,48 @@ var loginValidation = [
   body('password').notEmpty().withMessage('Password is required')
 ];
 
+// GET /auth/register
+router.get('/auth/register', isGuest, function(req, res) {
+  res.render('auth/register');
+});
+
+// GET /auth/login
+router.get('/auth/login', isGuest, function(req, res) {
+  res.render('auth/login');
+});
+
+// GET /auth/forgot-password
+router.get('/auth/forgot-password', isGuest, function(req, res) {
+  res.render('auth/forgot-password');
+});
+
+// GET /auth/reset-password
+router.get('/auth/reset-password', isGuest, function(req, res) {
+  res.render('auth/reset-password', { token: req.query.token });
+});
+
 // POST /auth/register
 router.post('/auth/register', authLimiter, registerValidation, async function(req, res) {
   try {
     var errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errors.array() });
+      errors.array().forEach(e => res.message({ type: 'error', text: e.msg }));
+      return res.redirect('/auth/register');
     }
 
     var { email, password } = req.body;
 
     var existing = await User.findOne({ where: { email: email.toLowerCase() } });
     if (existing) {
-      return res.status(409).json({ success: false, error: 'Email already registered' });
+      res.message({ type: 'error', text: 'Email already registered' });
+      return res.redirect('/auth/register');
     }
 
     if (process.env.ALLOWED_EMAIL_DOMAIN) {
       var domain = email.split('@')[1];
       if (domain !== process.env.ALLOWED_EMAIL_DOMAIN) {
-        return res.status(400).json({
-          success: false,
-          error: 'Only ' + process.env.ALLOWED_EMAIL_DOMAIN + ' email addresses are allowed'
-        });
+        res.message({ type: 'error', text: 'Only ' + process.env.ALLOWED_EMAIL_DOMAIN + ' addresses are allowed' });
+        return res.redirect('/auth/register');
       }
     }
 
@@ -68,14 +88,11 @@ router.post('/auth/register', authLimiter, registerValidation, async function(re
       console.error('Verification email failed:', emailErr.message);
     }
 
-    res.status(201).json({
-      success: true,
-      message: 'Registration successful. Please verify your email.',
-      userId: user.id
-    });
+    res.message({ type: 'success', text: 'Registration successful. Please check your email to verify.' });
+    res.redirect('/auth/login');
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ success: false, error: 'Registration failed' });
+    res.message({ type: 'error', text: 'Registration failed' });
+    res.redirect('/auth/register');
   }
 });
 
@@ -84,36 +101,43 @@ router.post('/auth/login', authLimiter, loginValidation, async function(req, res
   try {
     var errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errors.array() });
+      errors.array().forEach(e => res.message({ type: 'error', text: e.msg }));
+      return res.redirect('/auth/login');
     }
 
     var { email, password } = req.body;
     var user = await User.findOne({ where: { email: email.toLowerCase() } });
 
     if (!user) {
-      return res.status(401).json({ success: false, error: 'Invalid email or password' });
+      res.message({ type: 'error', text: 'Invalid email or password' });
+      return res.redirect('/auth/login');
     }
 
     if (!user.is_verified) {
-      return res.status(403).json({ success: false, error: 'Please verify your email first' });
+      res.message({ type: 'error', text: 'Please verify your email first' });
+      return res.redirect('/auth/login');
     }
 
     var isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, error: 'Invalid email or password' });
+      res.message({ type: 'error', text: 'Invalid email or password' });
+      return res.redirect('/auth/login');
     }
 
     req.session.regenerate(function(err) {
       if (err) {
-        return res.status(500).json({ success: false, error: 'Session error' });
+        res.message({ type: 'error', text: 'Session error' });
+        return res.redirect('/auth/login');
       }
       req.session.userId = user.id;
       req.session.email = user.email;
-      res.json({ success: true, message: 'Logged in successfully', userId: user.id });
+      req.session.userRole = user.role || 'alumnus';
+      res.redirect('/dashboard');
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ success: false, error: 'Login failed' });
+    res.message({ type: 'error', text: 'Login failed' });
+    res.redirect('/auth/login');
   }
 });
 
@@ -122,7 +146,7 @@ router.post('/auth/logout', function(req, res) {
   req.session.destroy(function(err) {
     if (err) console.error('Logout error:', err);
     res.clearCookie('connect.sid');
-    res.json({ success: true, message: 'Logged out' });
+    res.redirect('/auth/login');
   });
 });
 
@@ -131,7 +155,8 @@ router.get('/auth/verify', async function(req, res) {
   try {
     var { token } = req.query;
     if (!token) {
-      return res.status(400).json({ success: false, error: 'Token required' });
+      res.message({ type: 'error', text: 'Verification token is missing' });
+      return res.redirect('/auth/login');
     }
 
     var user = await User.findOne({
@@ -142,7 +167,8 @@ router.get('/auth/verify', async function(req, res) {
     });
 
     if (!user) {
-      return res.status(400).json({ success: false, error: 'Invalid or expired token' });
+      res.message({ type: 'error', text: 'Invalid or expired token' });
+      return res.redirect('/auth/login');
     }
 
     await user.update({
@@ -151,10 +177,57 @@ router.get('/auth/verify', async function(req, res) {
       verification_token_expiry: null
     });
 
-    res.json({ success: true, message: 'Email verified successfully' });
+    res.message({ type: 'success', text: 'Email verified successfully. Please login.' });
+    res.redirect('/auth/login');
   } catch (error) {
-    console.error('Verify error:', error);
-    res.status(500).json({ success: false, error: 'Verification failed' });
+    res.message({ type: 'error', text: 'Verification failed' });
+    res.redirect('/auth/login');
+  }
+});
+
+// GET /auth/verify-resend
+router.get('/auth/verify-resend', function(req, res) {
+  res.render('auth/verify-resend');
+});
+
+// POST /auth/verify-resend
+router.post('/auth/verify-resend', authLimiter, async function(req, res) {
+  try {
+    var { email } = req.body;
+    var user = await User.findOne({ where: { email: email.toLowerCase() } });
+
+    if (!user) {
+      // Security: Don't reveal if user exists
+      res.message({ type: 'success', text: 'If that email is registered, a new verification link has been sent.' });
+      return res.redirect('/auth/login');
+    }
+
+    if (user.is_verified) {
+      res.message({ type: 'success', text: 'Email is already verified. Please login.' });
+      return res.redirect('/auth/login');
+    }
+
+    // Generate new token
+    var verificationToken = generateToken();
+    var tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await user.update({
+      verification_token: verificationToken,
+      verification_token_expiry: tokenExpiry
+    });
+
+    try {
+      await sendVerificationEmail(email, verificationToken);
+    } catch (emailErr) {
+      console.error('Resend verification email failed:', emailErr.message);
+    }
+
+    res.message({ type: 'success', text: 'If that email is registered, a new verification link has been sent.' });
+    res.redirect('/auth/login');
+  } catch (error) {
+    console.error('Resend verify error:', error);
+    res.message({ type: 'error', text: 'Failed to resend link' });
+    res.redirect('/auth/verify-resend');
   }
 });
 
@@ -165,7 +238,8 @@ router.post('/auth/forgot-password', async function(req, res) {
     var user = await User.findOne({ where: { email: email.toLowerCase() } });
 
     if (!user) {
-      return res.json({ success: true, message: 'If that email exists, a reset link has been sent' });
+      res.message({ type: 'success', text: 'If that email exists, a reset link has been sent' });
+      return res.redirect('/auth/login');
     }
 
     var resetToken = generateToken();
@@ -180,10 +254,12 @@ router.post('/auth/forgot-password', async function(req, res) {
       console.error('Reset email failed:', emailErr.message);
     }
 
-    res.json({ success: true, message: 'If that email exists, a reset link has been sent' });
+    res.message({ type: 'success', text: 'If that email exists, a reset link has been sent' });
+    res.redirect('/auth/login');
   } catch (error) {
     console.error('Forgot password error:', error);
-    res.status(500).json({ success: false, error: 'Request failed' });
+    res.message({ type: 'error', text: 'Request failed' });
+    res.redirect('/auth/forgot-password');
   }
 });
 
@@ -192,16 +268,18 @@ router.post('/auth/reset-password', async function(req, res) {
   try {
     var { token, password, confirmPassword } = req.body;
 
-    if (!token || !password) {
-      return res.status(400).json({ success: false, error: 'Token and password required' });
+    if (!token || !password || !confirmPassword) {
+      res.message({ type: 'error', text: 'All fields are required' });
+      return res.redirect('/auth/reset-password?token=' + (token || ''));
     }
-
     if (password !== confirmPassword) {
-      return res.status(400).json({ success: false, error: 'Passwords do not match' });
+      res.message({ type: 'error', text: 'Passwords do not match' });
+      return res.redirect('/auth/reset-password?token=' + token);
     }
 
     if (password.length < 8) {
-      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters' });
+      res.message({ type: 'error', text: 'Password must be at least 8 characters' });
+      return res.redirect('/auth/reset-password?token=' + token);
     }
 
     var user = await User.findOne({
@@ -212,7 +290,8 @@ router.post('/auth/reset-password', async function(req, res) {
     });
 
     if (!user) {
-      return res.status(400).json({ success: false, error: 'Invalid or expired reset token' });
+      res.message({ type: 'error', text: 'Invalid or expired reset token' });
+      return res.redirect('/auth/forgot-password');
     }
 
     user.password = password;
@@ -220,10 +299,11 @@ router.post('/auth/reset-password', async function(req, res) {
     user.reset_password_token_expiry = null;
     await user.save();
 
-    res.json({ success: true, message: 'Password reset successfully' });
+    res.message({ type: 'success', text: 'Password reset successfully. Please login.' });
+    res.redirect('/auth/login');
   } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ success: false, error: 'Password reset failed' });
+    res.message({ type: 'error', text: 'Password reset failed' });
+    res.redirect('/auth/login');
   }
 });
 

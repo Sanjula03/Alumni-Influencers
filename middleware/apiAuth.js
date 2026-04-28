@@ -54,4 +54,43 @@ const authenticateApiToken = async (req, res, next) => {
   }
 };
 
-module.exports = { authenticateApiToken };
+/**
+ * Permission-checking middleware factory.
+ * Usage: router.get('/api/v1/alumni', authenticateApiToken, requirePermission('read:alumni'), handler)
+ * 
+ * Checks if the authenticated API client's permissions array includes the required scope.
+ * Returns 403 Forbidden if the permission is missing — this is the key enforcement
+ * that prevents a "read:alumni_of_day" token from accessing analytics endpoints.
+ * 
+ * @param {string} requiredPermission - The permission scope string (e.g. 'read:alumni', 'read:analytics')
+ * @returns {Function} Express middleware
+ */
+const requirePermission = (requiredPermission) => {
+  return (req, res, next) => {
+    const client = req.apiClient;
+
+    // Defensive check: ensure authenticateApiToken ran first
+    if (!client) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required before permission check.'
+      });
+    }
+
+    // Parse permissions — stored as JSON array in the database
+    const permissions = client.permissions || [];
+
+    if (!permissions.includes(requiredPermission)) {
+      return res.status(403).json({
+        success: false,
+        error: `Access denied. This token does not have the '${requiredPermission}' permission.`,
+        requiredPermission: requiredPermission,
+        yourPermissions: permissions
+      });
+    }
+
+    next();
+  };
+};
+
+module.exports = { authenticateApiToken, requirePermission };

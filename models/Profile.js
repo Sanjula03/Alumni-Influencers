@@ -36,10 +36,18 @@ const Profile = sequelize.define('Profile', {
   profile_image: {
     type: DataTypes.STRING(500),
     defaultValue: null
+  },
+  programme: {
+    type: DataTypes.STRING(255),
+    defaultValue: null
+  },
+  graduation_year: {
+    type: DataTypes.INTEGER,
+    defaultValue: null
   }
 }, {
   tableName: 'profiles',
-  indexes: [{ fields: ['user_id'], unique: true }]
+  indexes: [{ fields: ['user_id'], unique: true }, { fields: ['programme'] }, { fields: ['graduation_year'] }]
 });
 
 // ---- normalised sub tables (3NF) ----
@@ -67,7 +75,8 @@ const Certification = sequelize.define('Certification', {
   name: { type: DataTypes.STRING(255), allowNull: false },
   issuing_body: { type: DataTypes.STRING(255), allowNull: false },
   url: { type: DataTypes.STRING(500), defaultValue: null },
-  completion_date: { type: DataTypes.DATEONLY, allowNull: false }
+  completion_date: { type: DataTypes.DATEONLY, allowNull: false },
+  sponsor_amount: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0.00 }
 }, { tableName: 'certifications' });
 
 // professional licences
@@ -80,7 +89,8 @@ const Licence = sequelize.define('Licence', {
   name: { type: DataTypes.STRING(255), allowNull: false },
   awarding_body: { type: DataTypes.STRING(255), allowNull: false },
   url: { type: DataTypes.STRING(500), defaultValue: null },
-  completion_date: { type: DataTypes.DATEONLY, allowNull: false }
+  completion_date: { type: DataTypes.DATEONLY, allowNull: false },
+  sponsor_amount: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0.00 }
 }, { tableName: 'licences' });
 
 // short courses
@@ -93,7 +103,8 @@ const Course = sequelize.define('Course', {
   name: { type: DataTypes.STRING(255), allowNull: false },
   provider: { type: DataTypes.STRING(255), allowNull: false },
   url: { type: DataTypes.STRING(500), defaultValue: null },
-  completion_date: { type: DataTypes.DATEONLY, allowNull: false }
+  completion_date: { type: DataTypes.DATEONLY, allowNull: false },
+  sponsor_amount: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0.00 }
 }, { tableName: 'courses' });
 
 // employment history
@@ -105,10 +116,15 @@ const Employment = sequelize.define('Employment', {
   },
   company: { type: DataTypes.STRING(255), allowNull: false },
   role: { type: DataTypes.STRING(255), allowNull: false },
+  industry_sector: { type: DataTypes.STRING(100), defaultValue: null },
+  location: { type: DataTypes.STRING(255), defaultValue: null },
   start_date: { type: DataTypes.DATEONLY, allowNull: false },
   end_date: { type: DataTypes.DATEONLY, defaultValue: null },
   is_current: { type: DataTypes.BOOLEAN, defaultValue: false }
-}, { tableName: 'employment_history' });
+}, { 
+  tableName: 'employment_history',
+  indexes: [{ fields: ['industry_sector'] }]
+});
 
 // set up relationships
 Profile.hasMany(Degree, { foreignKey: 'profile_id', as: 'degrees', onDelete: 'CASCADE' });

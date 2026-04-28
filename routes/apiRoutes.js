@@ -9,7 +9,7 @@ var FeaturedAlumni = require('../models/FeaturedAlumni');
 var { Profile, Degree, Certification, Licence, Course, Employment } = require('../models/Profile');
 var { generateToken, hashToken } = require('../utils/tokenGenerator');
 var { isAuthenticated } = require('../middleware/auth');
-var { authenticateApiToken } = require('../middleware/apiAuth');
+var { authenticateApiToken, requirePermission } = require('../middleware/apiAuth');
 
 // GET /api/clients - list my api clients
 router.get('/api/clients', isAuthenticated, async function(req, res) {
@@ -96,8 +96,8 @@ router.get('/api/client/:client_id/usage', isAuthenticated, async function(req, 
   }
 });
 
-// GET /api/v1/featured - public api (requires bearer token)
-router.get('/api/v1/featured', authenticateApiToken, async function(req, res) {
+// GET /api/v1/featured - public api (requires bearer token with 'read:alumni_of_day' scope)
+router.get('/api/v1/featured', authenticateApiToken, requirePermission('read:alumni_of_day'), async function(req, res) {
   try {
     var today = new Date().toISOString().split('T')[0];
 
