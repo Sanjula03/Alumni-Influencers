@@ -2,45 +2,122 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Register - Alumni Analytics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - Alumni Influencers</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <style>
-    body { font-family: sans-serif; background: #f3f4f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-    .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 350px; }
-    h2 { margin-top: 0; text-align: center; }
-    .form-group { margin-bottom: 15px; }
-    label { display: block; margin-bottom: 5px; color: #374151; font-size: 14px; }
-    input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; box-sizing: border-box; }
-    button { width: 100%; padding: 10px; background: #10b981; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 10px; }
-    button:hover { background: #059669; }
-    .footer-links { text-align: center; margin-top: 15px; font-size: 14px; }
-    .footer-links a { color: #4f46e5; text-decoration: none; }
+    :root {
+      --primary: #000000;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #10b981;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      width: 100%;
+      max-width: 400px;
+      animation: slideUp 0.5s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    h2 { margin: 0 0 8px; font-weight: 800; font-size: 24px; letter-spacing: -0.025em; text-align: center; }
+    .subtitle { color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 32px; }
+
+    .form-group { text-align: left; margin-bottom: 20px; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    input:focus { outline: none; border-color: var(--primary); }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn:active { transform: scale(0.98); }
+
+    .footer-links { margin-top: 24px; font-size: 14px; text-align: center; color: var(--text-muted); }
+    .footer-links a { color: var(--primary); text-decoration: none; font-weight: 600; }
   </style>
 </head>
 <body>
   <div class="card">
     <h2>Create Account</h2>
+    <p class="subtitle">Join the Alumni Influencers community</p>
+    
     <%- include('../partials/flashData') %>
     
     <form action="/auth/register" method="POST">
       <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+      
       <div class="form-group">
         <label>University Email</label>
         <input type="email" name="email" required placeholder="e.g. j.doe@westminster.ac.uk">
       </div>
+      
       <div class="form-group">
         <label>Password</label>
-        <input type="password" name="password" required>
+        <input type="password" name="password" required placeholder="••••••••">
       </div>
+      
       <div class="form-group">
         <label>Confirm Password</label>
-        <input type="password" name="confirmPassword" required>
+        <input type="password" name="confirmPassword" required placeholder="••••••••">
       </div>
-      <button type="submit">Register</button>
+      
+      <button type="submit" class="btn">Register</button>
     </form>
     
     <div class="footer-links">
-      <p>Already have an account? <a href="/auth/login">Login</a></p>
+      Already have an account? <a href="/auth/login">Login</a>
     </div>
   </div>
+
+  <script>
+    document.querySelector('form').addEventListener('submit', function(e) {
+      const btn = this.querySelector('button');
+      btn.innerHTML = 'Creating account...';
+      btn.style.opacity = '0.7';
+      btn.style.pointerEvents = 'none';
+    });
+  </script>
 </body>
 </html>

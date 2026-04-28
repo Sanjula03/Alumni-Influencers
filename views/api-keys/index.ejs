@@ -1,0 +1,367 @@
+<%- include('../partials/header') %>
+<%- include('../partials/sidebar') %>
+
+<style>
+  :root {
+    --slate-dark: #0f172a;
+    --midnight-blue: #1e293b;
+    --accent-blue: #3b82f6;
+    --accent-emerald: #10b981;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --border-glass: rgba(226, 232, 240, 0.8);
+  }
+
+  .keys-workspace {
+    height: calc(100vh - 80px);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    padding: 32px 5%;
+    gap: 24px;
+    background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.03), transparent),
+                radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.03), transparent);
+  }
+
+  .keys-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--slate-dark);
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .keys-header p {
+    color: #64748b;
+    margin: 4px 0 0 0;
+    font-size: 14px;
+  }
+
+  .keys-layout {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 24px;
+    min-height: 0;
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 24px;
+    box-shadow: 0 4px 24px -4px rgba(0,0,0,0.05);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-blue);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pro-input {
+    width: 100%;
+    padding: 14px 20px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--slate-dark);
+    transition: all 0.2s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  }
+
+  .pro-input:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+  }
+
+  .scope-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .scope-chip:hover {
+    border-color: var(--accent-blue);
+    background: #f8fbff;
+  }
+
+  .scope-chip input {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border: 2px solid #cbd5e1;
+    cursor: pointer;
+    accent-color: var(--accent-blue);
+  }
+
+  .inventory-container {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 16px;
+    border-radius: 16px;
+    border: 1px solid #f1f5f9;
+  }
+
+  .pro-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .pro-table th {
+    position: sticky;
+    top: 0;
+    background: #f8fafc;
+    padding: 12px 16px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+    z-index: 10;
+  }
+
+  .pro-table td {
+    padding: 16px;
+    font-size: 13px;
+    color: var(--slate-dark);
+    border-bottom: 1px solid #f1f5f9;
+    background: #fff;
+  }
+
+  .status-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  .status-tag.active { background: #ecfdf5; color: #065f46; }
+  .status-tag.revoked { background: #fff1f2; color: #9f1239; }
+
+  .status-tag .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .ref-item {
+    padding: 16px;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid #f1f5f9;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+  }
+
+  .ref-item:hover {
+    border-color: var(--accent-blue);
+    transform: translateX(4px);
+  }
+
+  .ref-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--slate-dark);
+    margin-bottom: 4px;
+  }
+
+  .ref-scopes {
+    font-family: 'JetBrains Mono', 'Monaco', monospace;
+    font-size: 11px;
+    color: var(--accent-blue);
+  }
+
+  .btn-pro {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-pro.primary { background: var(--slate-dark); color: #fff; }
+  .btn-pro.primary:hover { background: var(--midnight-blue); transform: translateY(-2px); }
+
+  .btn-pro.danger { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+  .btn-pro.danger:hover { background: #ffe4e6; transform: scale(1.05); }
+
+  @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-key { animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+</style>
+
+<div class="main-content with-sidebar keys-workspace">
+  <%- include('../partials/flashData') %>
+
+  <div class="keys-header animate-key">
+    <h1>API & Security Governance</h1>
+    <p>Provision scoped credentials for external alumni ecosystem integrations.</p>
+  </div>
+
+  <div class="keys-layout">
+    
+    <div style="display: flex; flex-direction: column; gap: 24px; min-height: 0;">
+      
+      <div class="glass-card animate-key" style="animation-delay: 0.1s;">
+        <div class="section-label">
+          <span style="background: var(--accent-blue); width: 8px; height: 8px; border-radius: 50%;"></span>
+          Credential Provisioning
+        </div>
+
+        <form action="/api-keys" method="POST" style="display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end;">
+          <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+          
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="pro-form-group">
+              <label class="pro-label" style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 10px;">Application Identity</label>
+              <input type="text" name="app_name" required placeholder="e.g. University Analytics Pro" class="pro-input">
+            </div>
+
+            <div>
+              <label class="pro-label" style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 10px;">Permission Entitlements</label>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <label class="scope-chip"><input type="checkbox" name="scopes" value="read:alumni"> <span>read:alumni</span></label>
+                <label class="scope-chip"><input type="checkbox" name="scopes" value="read:analytics"> <span>read:analytics</span></label>
+                <label class="scope-chip"><input type="checkbox" name="scopes" value="read:alumni_of_day"> <span>read:alumni_of_day</span></label>
+                <label class="scope-chip"><input type="checkbox" name="scopes" value="write:bids"> <span>write:bids</span></label>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-pro primary" style="height: 52px; padding: 0 32px;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+            Provision Key
+          </button>
+        </form>
+      </div>
+
+      <div class="glass-card animate-key" style="animation-delay: 0.2s; flex: 1;">
+        <div class="section-label">
+          <span style="background: var(--accent-emerald); width: 8px; height: 8px; border-radius: 50%;"></span>
+          Credential Inventory
+        </div>
+
+        <div class="inventory-container">
+          <table class="pro-table">
+            <thead>
+              <tr>
+                <th>Application</th>
+                <th>Permissions</th>
+                <th>Usage</th>
+                <th>Last Active</th>
+                <th>Status</th>
+                <th>Protocol</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if(keys.length === 0) { %>
+                <tr><td colspan="6" style="text-align:center; padding:40px; color:#94a3b8;">No credentials provisioned yet.</td></tr>
+              <% } %>
+              <% keys.forEach(function(k) { %>
+                <tr <%= k.is_revoked ? 'style="opacity:0.6;"' : '' %>>
+                  <td style="font-weight: 700;"><%= k.client_name %></td>
+                  <td>
+                    <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                      <% (k.permissions || []).forEach(function(p) { %>
+                        <span style="font-family: monospace; font-size: 10px; padding: 2px 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; color: var(--accent-blue);"><%= p %></span>
+                      <% }) %>
+                    </div>
+                  </td>
+                  <td style="font-weight: 600;"><%= k.dataValues.usageCount || 0 %> req</td>
+                  <td style="color: #64748b;"><%= k.last_used_at ? new Date(k.last_used_at).toLocaleDateString() : 'Never' %></td>
+                  <td>
+                    <span class="status-tag <%= k.is_revoked ? 'revoked' : 'active' %>">
+                      <span class="dot"></span> <%= k.is_revoked ? 'Revoked' : 'Active' %>
+                    </span>
+                  </td>
+                  <td>
+                    <% if(!k.is_revoked) { %>
+                      <form action="/api-keys/<%= k.id %>?_method=DELETE" method="POST" style="margin:0;">
+                        <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+                        <button type="submit" class="btn-pro danger" style="padding: 6px 12px; font-size: 11px;" onclick="return confirm('Revoke this credential? This cannot be undone.');">Revoke</button>
+                      </form>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="glass-card animate-key" style="animation-delay: 0.3s; background: linear-gradient(to bottom, #ffffff, #f9fafc);">
+      <div class="section-label">
+        <span style="background: var(--accent-amber); width: 8px; height: 8px; border-radius: 50%;"></span>
+        Scoping Reference
+      </div>
+      
+      <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin-bottom: 24px;">
+        Use the following scoping standards to ensure Least Privilege Access (LPA) for your specific platform needs:
+      </p>
+
+      <div class="ref-item">
+        <div class="ref-title">Analytics Dashboard</div>
+        <div class="ref-scopes">read:alumni, read:analytics</div>
+      </div>
+
+      <div class="ref-item">
+        <div class="ref-title">Mobile AR Experience</div>
+        <div class="ref-scopes">read:alumni_of_day</div>
+      </div>
+
+      <div class="ref-item">
+        <div class="ref-title">Enterprise Bidding Client</div>
+        <div class="ref-scopes">write:bids</div>
+      </div>
+
+      <div style="margin-top: auto; padding: 16px; background: #fff; border: 1px solid #f1f5f9; border-radius: 18px;">
+        <h5 style="margin: 0 0 8px 0; font-size: 13px; color: var(--slate-dark); display: flex; align-items: center; gap: 8px;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+          Security Policy
+        </h5>
+        <p style="margin: 0; font-size: 12px; color: #64748b; line-height: 1.5;">
+          Revoked keys are instantly invalidated across the entire global API gateway.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

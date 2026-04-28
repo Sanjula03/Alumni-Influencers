@@ -32,19 +32,19 @@ const sendVerificationEmail = async (to, token) => {
     to,
     subject: 'Verify Your Email - Alumni Influencers Platform',
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2c3e50;">Welcome to Alumni Influencers!</h2>
-        <p>Thank you for registering. Use the verification token below to verify your email via the API:</p>
-        <div style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center;">
-          <p style="margin: 0 0 5px 0; font-size: 12px; color: #7f8c8d;">Your Verification Token:</p>
-          <code style="font-size: 14px; color: #2c3e50; word-break: break-all;">${token}</code>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e1e8ed; border-radius: 8px; padding: 20px;">
+        <h2 style="color: #2c3e50; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px;">Welcome to Alumni Influencers!</h2>
+        <p>Thank you for registering. Please click the button below to verify your email address and activate your account:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.APP_URL}/auth/verify?token=${token}" 
+             style="background-color: #000000; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+            Verify Email Address
+          </a>
         </div>
-        <p style="font-size: 13px;">To verify, send a <strong>GET</strong> request to:</p>
-        <div style="background-color: #f4f4f4; padding: 10px; border-radius: 5px; margin: 10px 0;">
-          <code style="font-size: 13px; color: #2c3e50;">GET /auth/verify?token=${token}</code>
-        </div>
-        <p style="color: #7f8c8d; font-size: 12px;">
-          This token will expire in 24 hours. If you did not register, please ignore this email.
+        <p style="font-size: 13px; color: #7f8c8d;">If the button above doesn't work, copy and paste this link into your browser:</p>
+        <p style="font-size: 12px; color: #3498db; word-break: break-all;">${process.env.APP_URL}/auth/verify?token=${token}</p>
+        <p style="color: #95a5a6; font-size: 12px; margin-top: 30px; border-top: 1px solid #f4f4f4; padding-top: 10px;">
+          This link will expire in 24 hours. If you did not register, please ignore this email.
         </p>
       </div>
     `
@@ -68,20 +68,19 @@ const sendPasswordResetEmail = async (to, token) => {
     to,
     subject: 'Password Reset - Alumni Influencers Platform',
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #2c3e50;">Password Reset Request</h2>
-        <p>You requested a password reset. Use the token below with the API:</p>
-        <div style="background-color: #f4f4f4; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center;">
-          <p style="margin: 0 0 5px 0; font-size: 12px; color: #7f8c8d;">Your Reset Token:</p>
-          <code style="font-size: 14px; color: #2c3e50; word-break: break-all;">${token}</code>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e1e8ed; border-radius: 8px; padding: 20px;">
+        <h2 style="color: #2c3e50; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px;">Password Reset Request</h2>
+        <p>You requested a password reset. Click the button below to set a new password:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${process.env.APP_URL}/auth/reset-password?token=${token}" 
+             style="background-color: #000000; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+            Reset Password
+          </a>
         </div>
-        <p style="font-size: 13px;">To reset your password, send a <strong>POST</strong> request to:</p>
-        <div style="background-color: #f4f4f4; padding: 10px; border-radius: 5px; margin: 10px 0;">
-          <code style="font-size: 13px; color: #2c3e50;">POST /auth/reset-password</code>
-          <pre style="font-size: 12px; color: #555; margin: 5px 0 0 0;">{ "token": "${token}", "password": "newPass", "confirmPassword": "newPass" }</pre>
-        </div>
-        <p style="color: #7f8c8d; font-size: 12px;">
-          This token will expire in 1 hour. If you did not request a reset, please ignore this email.
+        <p style="font-size: 13px; color: #7f8c8d;">If the button above doesn't work, copy and paste this link into your browser:</p>
+        <p style="font-size: 12px; color: #3498db; word-break: break-all;">${process.env.APP_URL}/auth/reset-password?token=${token}</p>
+        <p style="color: #95a5a6; font-size: 12px; margin-top: 30px; border-top: 1px solid #f4f4f4; padding-top: 10px;">
+          This link will expire in 1 hour. If you did not request a reset, please ignore this email.
         </p>
       </div>
     `

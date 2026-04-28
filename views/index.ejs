@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alumni Intelligence | Westminster</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+  <style>
+    :root {
+      --primary: #000000;
+      --indigo: #6366f1;
+      --bg-gradient: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 50%, #e0e7ff 100%);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --glass: rgba(255, 255, 255, 0.7);
+      --glass-blur: blur(20px);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      font-family: 'Inter', sans-serif; 
+      color: var(--text); 
+      line-height: 1.4; 
+      background: var(--bg-gradient);
+      background-attachment: fixed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Decorative Orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+      opacity: 0.4;
+    }
+    .orb-1 { width: 400px; height: 400px; background: #818cf8; top: -100px; right: -100px; }
+    .orb-2 { width: 300px; height: 300px; background: #c084fc; bottom: 100px; left: -100px; }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 40px 8%;
+      width: 100%;
+    }
+
+    .logo { 
+      font-weight: 900; 
+      font-size: 24px; 
+      letter-spacing: -0.04em; 
+      text-transform: uppercase; 
+      color: var(--primary);
+    }
+
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a { text-decoration: none; color: var(--text); font-weight: 600; font-size: 14px; transition: opacity 0.2s; }
+    .nav-links a:hover { opacity: 0.6; }
+    .btn-login-nav { background: #000; color: #fff !important; padding: 12px 28px; border-radius: 100px; }
+
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8% 100px;
+      text-align: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      background: rgba(0,0,0,0.05);
+      border: 1px solid rgba(0,0,0,0.05);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      animation: fadeInDown 0.8s ease;
+    }
+
+    .hero h1 {
+      font-size: clamp(48px, 8vw, 92px);
+      font-weight: 900;
+      line-height: 0.95;
+      letter-spacing: -0.05em;
+      margin-bottom: 32px;
+      animation: fadeInUp 0.8s ease both;
+      animation-delay: 0.2s;
+    }
+
+    .hero p {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-muted);
+      max-width: 650px;
+      margin: 0 auto 48px;
+      animation: fadeInUp 0.8s ease both;
+      animation-delay: 0.4s;
+    }
+
+    .cta-group { 
+      display: flex; 
+      gap: 16px; 
+      justify-content: center;
+      animation: fadeInUp 0.8s ease both;
+      animation-delay: 0.6s;
+      margin-bottom: 80px;
+    }
+
+    .btn { 
+      padding: 20px 40px; 
+      border-radius: 100px; 
+      font-weight: 800; 
+      text-decoration: none; 
+      font-size: 16px;
+      transition: transform 0.2s, box-shadow 0.2s; 
+    }
+    .btn-primary { background: var(--primary); color: white; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2); }
+    .btn-secondary { background: white; color: var(--primary); border: 1px solid rgba(0,0,0,0.1); }
+    .btn:hover { transform: scale(1.05); }
+
+    /* Featured Card Glassmorphism */
+    .featured-container {
+      width: 100%;
+      max-width: 800px;
+      animation: fadeInUp 0.8s ease both;
+      animation-delay: 0.8s;
+    }
+
+    .glass-card {
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 32px;
+      padding: 48px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    .featured-label {
+      background: #000;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 24px;
+    }
+
+    .alumnus-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 20px;
+      border: 4px solid #fff;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+    }
+
+    .glass-card h2 { font-size: 32px; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 4px; }
+    .glass-card .subtitle { color: var(--text-muted); font-size: 14px; font-weight: 600; margin-bottom: 24px; }
+    .glass-card .bio { font-size: 18px; color: #475569; line-height: 1.6; margin-bottom: 32px; max-width: 600px; font-style: italic; }
+
+    @keyframes fadeInUp {
+      from { transform: translateY(40px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    @keyframes fadeInDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    footer {
+      padding: 48px 8%;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .nav { padding: 32px 5%; }
+      .hero { padding: 40px 5%; }
+      .cta-group { flex-direction: column; width: 100%; }
+      .glass-card { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <nav class="nav">
+    <div class="logo">Alumni Intelligence</div>
+    <div class="nav-links">
+      <a href="/api-docs">API Docs</a>
+      <a href="/auth/register">Register</a>
+      <a href="/auth/login" class="btn-login-nav">Login</a>
+    </div>
+  </nav>
+
+  <main class="hero">
+    <div class="hero-badge">University of Westminster</div>
+    <h1>Connecting the next generation of leaders.</h1>
+    <p>A premier global network for Westminster alumni to inspire through shared professional excellence and augmented reality.</p>
+    
+    <div class="cta-group">
+      <a href="/auth/register" class="btn btn-primary">Get Started</a>
+      <a href="/auth/login" class="btn btn-secondary">Access Dashboard</a>
+    </div>
+
+    <div class="featured-container">
+      <% if (featuredProfile) { %>
+        <div class="glass-card">
+          <div class="featured-label">Featured Today</div>
+          <img src="<%= featuredProfile.profile_image || 'https://ui-avatars.com/api/?name=' + featuredProfile.first_name + '+' + featuredProfile.last_name + '&background=000&color=fff' %>" 
+               class="alumnus-avatar">
+          <h2><%= featuredProfile.first_name %> <%= featuredProfile.last_name %></h2>
+          <div class="subtitle"><%= featuredProfile.graduation_year %> • <%= featuredProfile.programme %></div>
+          <div class="bio">
+            "<%= featuredProfile.biography || 'Inspiring the future leaders of Westminster through innovation and global impact.' %>"
+          </div>
+
+          <!-- Professional Credentials - Requirement 4 -->
+          <div style="width: 100%; margin-top: 24px; padding-top: 32px; border-top: 1px solid rgba(0,0,0,0.05);">
+            <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 20px;">Professional Endorsements</div>
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 32px;">
+              <% if (featuredProfile.certifications && featuredProfile.certifications.length > 0) { %>
+                <% featuredProfile.certifications.forEach(cert => { %>
+                  <div style="background: #fff; padding: 12px 20px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.05); text-align: left; min-width: 180px;">
+                    <div style="font-size: 13px; font-weight: 800; color: #000;"><%= cert.name %></div>
+                    <div style="font-size: 11px; color: #6366f1; font-weight: 700;"><%= cert.issuing_body %></div>
+                  </div>
+                <% }) %>
+              <% } %>
+              
+              <% if (featuredProfile.licences && featuredProfile.licences.length > 0) { %>
+                <% featuredProfile.licences.forEach(lic => { %>
+                  <div style="background: #fff; padding: 12px 20px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.05); text-align: left; min-width: 180px;">
+                    <div style="font-size: 13px; font-weight: 800; color: #000;"><%= lic.name %></div>
+                    <div style="font-size: 11px; color: #22c55e; font-weight: 700;"><%= lic.awarding_body %></div>
+                  </div>
+                <% }) %>
+              <% } %>
+
+              <% if (featuredProfile.courses && featuredProfile.courses.length > 0) { %>
+                <% featuredProfile.courses.forEach(course => { %>
+                  <div style="background: #fff; padding: 12px 20px; border-radius: 16px; border: 1px solid rgba(0,0,0,0.05); text-align: left; min-width: 180px;">
+                    <div style="font-size: 13px; font-weight: 800; color: #000;"><%= course.name %></div>
+                    <div style="font-size: 11px; color: #f59e0b; font-weight: 700;"><%= course.provider %></div>
+                  </div>
+                <% }) %>
+              <% } %>
+
+              <% if (!featuredProfile.certifications.length && !featuredProfile.licences.length && !featuredProfile.courses.length) { %>
+                <div style="font-size: 14px; color: #94a3b8; font-style: italic;">No specific professional endorsements displayed.</div>
+              <% } %>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 24px; align-items: center;">
+            <a href="<%= featuredProfile.linkedin_url || '#' %>" target="_blank" style="text-decoration: none; color: #6366f1; font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+              Connect via LinkedIn <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+            </a>
+            <a href="/auth/login" style="text-decoration: none; color: #000; font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 8px;">
+              Full Story <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+            </a>
+          </div>
+        </div>
+      <% } else { %>
+        <div class="glass-card" style="padding: 60px 40px; border: 2px dashed rgba(0,0,0,0.1); background: rgba(255,255,255,0.3);">
+          <div style="font-size: 14px; font-weight: 800; color: rgba(0,0,0,0.4); text-transform: uppercase; letter-spacing: 0.1em;">Daily Selection Active</div>
+          <div style="margin: 24px 0; font-size: 20px; font-weight: 700; color: rgba(0,0,0,0.6);">Bidding in progress...</div>
+          <a href="/auth/login" style="text-decoration: none; color: #000; font-weight: 800; font-size: 14px;">Become the next influencer &rarr;</a>
+        </div>
+      <% } %>
+    </div>
+  </main>
+
+  <footer>
+    &copy; <%= new Date().getFullYear() %> University of Westminster Alumni Intelligence.
+  </footer>
+</body>
+</html>

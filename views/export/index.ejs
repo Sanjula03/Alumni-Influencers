@@ -1,80 +1,353 @@
 <%- include('../partials/header') %>
 <%- include('../partials/sidebar') %>
 
-<div class="main-content with-sidebar">
-  <div class="top-header">
-    <h2>Export & Report Generation</h2>
-  </div>
+<style>
+  :root {
+    --slate-dark: #0f172a;
+    --midnight-blue: #1e293b;
+    --accent-blue: #3b82f6;
+    --accent-emerald: #10b981;
+    --accent-violet: #8b5cf6;
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --border-glass: rgba(226, 232, 240, 0.8);
+  }
 
+  .reports-workspace {
+    height: calc(100vh - 80px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 32px 5%;
+    gap: 24px;
+    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent),
+                radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.05), transparent);
+  }
+
+  .reports-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .reports-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--slate-dark);
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .reports-header p {
+    color: #64748b;
+    margin: 4px 0 0 0;
+    font-size: 14px;
+  }
+
+  .export-layout {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 32px;
+    flex: 1;
+    min-height: 0; 
+  }
+
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-glass);
+    border-radius: 24px;
+    box-shadow: 0 4px 24px -4px rgba(0,0,0,0.05);
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-blue);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pro-form-group {
+    margin-bottom: 24px;
+  }
+
+  .pro-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--slate-dark);
+    margin-bottom: 10px;
+  }
+
+  .pro-select-ui {
+    width: 100%;
+    padding: 14px 20px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--slate-dark);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 20px center;
+    background-size: 16px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .pro-select-ui:focus {
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    outline: none;
+  }
+
+  .action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: auto;
+  }
+
+  .btn-pro {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 18px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    text-decoration: none;
+  }
+
+  .btn-pro.primary {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: white;
+    box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.3);
+  }
+
+  .btn-pro.secondary {
+    background: #fff;
+    color: var(--slate-dark);
+    border: 1px solid #e2e8f0;
+  }
+
+  .btn-pro:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px -8px rgba(0,0,0,0.12);
+  }
+
+  .btn-pro.primary:hover {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  }
+
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .field-badge {
+    background: #fff;
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    transition: all 0.2s ease;
+  }
+
+  .field-badge:hover {
+    border-color: var(--accent-blue);
+    background: #f8fbff;
+  }
+
+  .field-badge .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-blue);
+  }
+
+  .info-note {
+    background: linear-gradient(135deg, #f8fbff 0%, #f0f7ff 100%);
+    border: 1px solid #dbeafe;
+    padding: 20px;
+    border-radius: 18px;
+    margin-top: auto;
+  }
+
+  .info-note h5 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    color: #1e40af;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .info-note p {
+    margin: 0;
+    font-size: 12px;
+    color: #3b82f6;
+    line-height: 1.5;
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-pro {
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+</style>
+
+<div class="main-content with-sidebar reports-workspace">
   <%- include('../partials/flashData') %>
 
-  <div class="card">
-    <h3 style="margin-top:0;">Generate Custom Data Export</h3>
-    <p style="color: var(--text-muted); font-size:13px; margin-bottom: 20px;">Filter the alumni dataset by programme, year, or sector, then export as CSV or a formatted PDF executive summary.</p>
-
-    <div style="display:flex; gap: 40px;">
-      
-      <div style="flex:1;">
-        <form id="exportForm" action="/export/csv" method="GET">
-          <div style="margin-bottom: 15px;">
-            <label>Filter by Programme:</label>
-            <input type="text" id="filterProgramme" name="programme" placeholder="e.g. Computer Science" style="width:100%;">
-          </div>
-          <div style="margin-bottom: 15px;">
-            <label>Filter by Graduation Year:</label>
-            <input type="number" id="filterYear" name="year" placeholder="YYYY" style="width:100%;">
-          </div>
-          <div style="margin-bottom: 15px;">
-            <label>Filter by Industry Sector:</label>
-            <input type="text" id="filterSector" name="sector" placeholder="e.g. Technology" style="width:100%;">
-          </div>
-
-          <!-- Save/Load filter presets (rubric: "save filter presets") -->
-          <div style="display:flex; gap:8px; margin-bottom:20px;">
-            <button type="button" onclick="savePreset()" class="btn" style="flex:1; border:1px solid var(--border-color); color:var(--text-main); background:#ffffff; font-size:12px;">
-              💾 Save Preset
-            </button>
-            <button type="button" onclick="loadPreset()" class="btn" style="flex:1; border:1px solid var(--border-color); color:var(--text-main); background:#ffffff; font-size:12px;">
-              📂 Load Preset
-            </button>
-          </div>
-          
-          <div style="display:flex; gap:10px;">
-            <button type="submit" onclick="document.getElementById('exportForm').action='/export/csv';" class="btn" style="flex:1; border: 1px solid var(--border-color); color: var(--text-main); background: #ffffff;">
-              ⬇ Download CSV
-            </button>
-            <button type="submit" onclick="document.getElementById('exportForm').action='/export/pdf';" class="btn btn-primary" style="flex:1;">
-              📄 Generate PDF
-            </button>
-          </div>
-        </form>
-      </div>
-
-      <div style="flex:1; background: #f9fafb; border: 1px solid var(--border-color); padding: 20px; border-radius: 4px;">
-        <h4 style="margin-top:0;">Available Fields in Export</h4>
-        <ul style="color: var(--text-muted); font-size: 14px; line-height:1.6; padding-left: 20px;">
-          <li>First Name & Last Name</li>
-          <li>Programme Name</li>
-          <li>Graduation Year</li>
-          <li>Current Company</li>
-          <li>Current Role</li>
-          <li>Industry Sector</li>
-          <li>Geographic Location</li>
-        </ul>
-        <div style="margin-top:16px; padding:12px; background:#ffffff; border:1px solid var(--border-color); border-radius:4px;">
-          <p style="font-size:12px; color:#6b7280; margin:0;">
-            <strong>CSV:</strong> Raw data with all fields above, suitable for spreadsheet analysis.<br>
-            <strong>PDF:</strong> Executive summary with total counts, applied filters, and a formatted alumni list.
-          </p>
-        </div>
-      </div>
-
+  <div class="reports-header animate-pro">
+    <div>
+      <h1>Export & Data Intelligence</h1>
+      <p>Configure custom parameters for executive alumni reports.</p>
     </div>
+    <div style="display: flex; gap: 12px;">
+      <button type="button" onclick="loadPreset()" class="btn-pro secondary" style="padding: 10px 20px; font-size: 12px;">
+        📂 Load Preset
+      </button>
+      <button type="button" onclick="savePreset()" class="btn-pro secondary" style="padding: 10px 20px; font-size: 12px; border-color: var(--accent-blue); color: var(--accent-blue);">
+        💾 Save Current
+      </button>
+    </div>
+  </div>
+
+  <div class="export-layout">
+    
+    <div class="glass-card animate-pro" style="animation-delay: 0.1s;">
+      <div class="section-label">
+        <span style="background: var(--accent-blue); width: 8px; height: 8px; border-radius: 50%;"></span>
+        Report Configuration
+      </div>
+
+      <form id="exportForm" action="/export/csv" method="GET" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="pro-form-group">
+          <label class="pro-label">Target Programme</label>
+          <div class="custom-select-wrapper">
+            <div class="custom-select-trigger"><span>Global - All Disciplines</span></div>
+            <div class="custom-options">
+              <div class="custom-options-content">
+                <div class="custom-option selected" data-value="">Global - All Disciplines</div>
+                <% const programmes = ['Computer Science', 'Business Management', 'Fine Arts', 'Mechanical Engineering', 'Data Science', 'Nursing']; %>
+                <% programmes.forEach(p => { %>
+                  <div class="custom-option" data-value="<%= p %>"><%= p %></div>
+                <% }) %>
+              </div>
+            </div>
+            <input type="hidden" id="filterProgramme" name="programme" value="">
+          </div>
+        </div>
+
+        <div class="pro-form-group">
+          <label class="pro-label">Graduation Cohort</label>
+          <div class="custom-select-wrapper">
+            <div class="custom-select-trigger"><span>All Temporal Data</span></div>
+            <div class="custom-options">
+              <div class="custom-options-content">
+                <div class="custom-option selected" data-value="">All Temporal Data</div>
+                <% const currentYear = new Date().getFullYear(); %>
+                <% for(let y = currentYear; y >= 2010; y--) { %>
+                  <div class="custom-option" data-value="<%= y %>"><%= y %></div>
+                <% } %>
+              </div>
+            </div>
+            <input type="hidden" id="filterYear" name="year" value="">
+          </div>
+        </div>
+
+        <div class="pro-form-group">
+          <label class="pro-label">Industry Vertical</label>
+          <div class="custom-select-wrapper">
+            <div class="custom-select-trigger"><span>Cross-Sector Analysis</span></div>
+            <div class="custom-options">
+              <div class="custom-options-content">
+                <div class="custom-option selected" data-value="">Cross-Sector Analysis</div>
+                <% const sectors = ['Technology', 'Finance', 'Healthcare', 'Education', 'Manufacturing', 'Retail', 'Consulting']; %>
+                <% sectors.forEach(s => { %>
+                  <div class="custom-option" data-value="<%= s %>"><%= s %></div>
+                <% }) %>
+              </div>
+            </div>
+            <input type="hidden" id="filterSector" name="sector" value="">
+          </div>
+        </div>
+
+        <div class="action-grid">
+          <button type="submit" onclick="document.getElementById('exportForm').action='/export/csv';" class="btn-pro secondary">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Excel / CSV
+          </button>
+          <button type="submit" onclick="document.getElementById('exportForm').action='/export/pdf';" class="btn-pro primary">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+            Executive PDF
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="glass-card animate-pro" style="animation-delay: 0.2s; background: linear-gradient(to bottom, #ffffff, #f8fafc);">
+      <div class="section-label">
+        <span style="background: var(--accent-emerald); width: 8px; height: 8px; border-radius: 50%;"></span>
+        Export Metadata
+      </div>
+
+      <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin: 0 0 20px 0;">
+        The intelligence engine will compile the following verified data points into your custom document:
+      </p>
+
+      <div class="fields-grid">
+        <div class="field-badge"><span class="dot"></span> Identity Info</div>
+        <div class="field-badge"><span class="dot" style="background: var(--accent-emerald)"></span> Programme</div>
+        <div class="field-badge"><span class="dot" style="background: var(--accent-violet)"></span> Cohort Year</div>
+        <div class="field-badge"><span class="dot" style="background: var(--accent-blue)"></span> Enterprise</div>
+        <div class="field-badge"><span class="dot" style="background: #f59e0b"></span> Role Title</div>
+        <div class="field-badge"><span class="dot" style="background: #ec4899"></span> Sector</div>
+        <div class="field-badge"><span class="dot" style="background: #06b6d4"></span> Geolocation</div>
+      </div>
+
+      <div class="info-note">
+        <h5>
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          Protocol Insight
+        </h5>
+        <p>
+          Generated files are encrypted and formatted for executive review. CSV exports are optimized for Pivot Table analysis.
+        </p>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <script>
-  // Filter preset save/load using localStorage (rubric: "save filter presets")
   function savePreset() {
     const preset = {
       programme: document.getElementById('filterProgramme').value,
@@ -82,17 +355,31 @@
       sector: document.getElementById('filterSector').value
     };
     localStorage.setItem('exportPreset', JSON.stringify(preset));
-    alert('Filter preset saved successfully!');
+    
+    const btn = document.querySelector('button[onclick="savePreset()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '✨ Preset Saved';
+    btn.style.borderColor = '#10b981';
+    btn.style.color = '#10b981';
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.style.borderColor = 'var(--accent-blue)';
+      btn.style.color = 'var(--accent-blue)';
+    }, 2000);
   }
 
   function loadPreset() {
     const saved = localStorage.getItem('exportPreset');
-    if (!saved) { alert('No saved preset found.'); return; }
+    if (!saved) { alert('System Note: No saved preset found in local storage.'); return; }
     const preset = JSON.parse(saved);
     document.getElementById('filterProgramme').value = preset.programme || '';
     document.getElementById('filterYear').value = preset.year || '';
     document.getElementById('filterSector').value = preset.sector || '';
-    alert('Preset loaded!');
+    
+    const btn = document.querySelector('button[onclick="loadPreset()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⚡ Sync Complete';
+    setTimeout(() => btn.innerHTML = originalText, 2000);
   }
 </script>
 

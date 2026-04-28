@@ -158,12 +158,22 @@
       <div class="footer-links">
         <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
           <a href="/auth/forgot-password">Forgot password?</a>
-          <a href="/auth/register">Verify email</a>
+          <a href="/auth/verify-resend">Verify email</a>
         </div>
         <p style="margin: 0;">Don't have an account? <a href="/auth/register">Register here</a></p>
       </div>
     </div>
   </div>
+
+  <script>
+    // Prevent double-submission which can break rotating CSRF tokens
+    document.querySelector('form').addEventListener('submit', function(e) {
+      const btn = this.querySelector('button');
+      btn.innerHTML = 'Signing in...';
+      btn.style.opacity = '0.7';
+      btn.style.pointerEvents = 'none';
+    });
+  </script>
 
 </body>
 </html>

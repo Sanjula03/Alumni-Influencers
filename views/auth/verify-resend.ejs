@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Forgot Password - Alumni Influencers</title>
+  <title>Verify Email - Alumni Influencers</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
   <style>
     :root {
@@ -13,6 +13,7 @@
       --text: #0f172a;
       --text-muted: #64748b;
       --border: #e2e8f0;
+      --success: #10b981;
     }
 
     body {
@@ -34,6 +35,7 @@
       box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
       width: 100%;
       max-width: 400px;
+      text-align: center;
       animation: slideUp 0.5s ease-out;
     }
 
@@ -42,8 +44,19 @@
       to { transform: translateY(0); opacity: 1; }
     }
 
-    h2 { margin: 0 0 8px; font-weight: 800; font-size: 24px; letter-spacing: -0.025em; text-align: center; }
-    .subtitle { color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 32px; line-height: 1.5; }
+    .icon-container {
+      width: 64px;
+      height: 64px;
+      background: #f1f5f9;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+
+    h2 { margin: 0 0 12px; font-weight: 800; font-size: 24px; letter-spacing: -0.025em; }
+    p { color: var(--text-muted); font-size: 15px; line-height: 1.6; margin-bottom: 32px; }
 
     .form-group { text-align: left; margin-bottom: 20px; }
     label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
@@ -67,46 +80,36 @@
       border-radius: 6px;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 12px;
       transition: transform 0.2s, opacity 0.2s;
     }
     .btn:hover { opacity: 0.9; }
     .btn:active { transform: scale(0.98); }
 
-    .footer-links { margin-top: 24px; font-size: 14px; text-align: center; color: var(--text-muted); }
+    .footer-links { margin-top: 24px; font-size: 14px; }
     .footer-links a { color: var(--primary); text-decoration: none; font-weight: 600; }
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>Reset Password</h2>
-    <p class="subtitle">Enter your email and we'll send you instructions to reset your password.</p>
-    
+    <div class="icon-container">
+      <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+    </div>
+    <h2>Verify your email</h2>
     <%- include('../partials/flashData') %>
+    <p>Didn't receive the verification email? Enter your address below and we'll send you a new link.</p>
     
-    <form action="/auth/forgot-password" method="POST">
+    <form action="/auth/verify-resend" method="POST">
       <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
-      
       <div class="form-group">
         <label>University Email</label>
         <input type="email" name="email" required placeholder="e.g. j.doe@westminster.ac.uk">
       </div>
-      
-      <button type="submit" class="btn">Send Reset Link</button>
+      <button type="submit" class="btn">Resend Verification Link</button>
     </form>
     
     <div class="footer-links">
       <a href="/auth/login">Back to Login</a>
     </div>
   </div>
-
-  <script>
-    document.querySelector('form').addEventListener('submit', function(e) {
-      const btn = this.querySelector('button');
-      btn.innerHTML = 'Sending link...';
-      btn.style.opacity = '0.7';
-      btn.style.pointerEvents = 'none';
-    });
-  </script>
 </body>
 </html>

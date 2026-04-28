@@ -1,0 +1,530 @@
+<%- include('../partials/header') %>
+<%- include('../partials/sidebar') %>
+
+<style>
+  /* Analytics Studio: Midnight & Slate Integration */
+  .analytics-workspace { 
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); 
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+  
+  .analytics-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 48px; }
+  .analytics-header h1 { font-size: 32px; font-weight: 900; color: #0f172a; letter-spacing: -0.05em; margin: 0; }
+  .analytics-header p { color: #64748b; font-size: 16px; margin-top: 8px; }
+
+  /* Premium Metric Tiles */
+  .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 40px; }
+  .metric-tile {
+    border-radius: 32px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+  }
+  .metric-tile:hover { transform: translateY(-4px); }
+  .metric-tile.blue { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); }
+  .metric-tile.indigo { background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); }
+  .metric-tile.emerald { background: linear-gradient(135deg, #10b981 0%, #065f46 100%); }
+  
+  .metric-tile .label { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.8; margin-bottom: 12px; }
+  .metric-tile .value { font-size: 48px; font-weight: 900; letter-spacing: -0.04em; }
+  .metric-tile .icon-bg { position: absolute; right: -20px; bottom: -20px; font-size: 120px; opacity: 0.1; transform: rotate(-15deg); }
+
+  /* Section Cards */
+  .analytics-card {
+    background: linear-gradient(to bottom right, #ffffff 0%, #fcfdfe 100%);
+    border-radius: 40px;
+    padding: 48px;
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 0, 0, 0.05),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+    border: 1px solid #e2e8f0;
+    margin-bottom: 32px;
+  }
+
+  .chart-container { height: 320px; position: relative; }
+  .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .chart-title-area h3 { font-size: 20px; font-weight: 900; color: #0f172a; margin: 0; letter-spacing: -0.03em; }
+  .chart-title-area p { font-size: 13px; color: #64748b; margin-top: 4px; }
+
+  /* Professional Buttons */
+  .pro-button {
+    padding: 12px 24px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .pro-button.midnight { background: #0f172a; color: #fff; }
+  .pro-button.midnight:hover { background: #1e293b; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(15,23,42,0.2); }
+  .pro-button.outline { background: transparent; border-color: #e2e8f0; color: #64748b; }
+  .pro-button.outline:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+
+  /* Filter Selects */
+  .pro-select {
+    padding: 14px 20px;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    outline: none;
+    min-width: 180px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
+  }
+  .pro-select:focus { border-color: #38bdf8; box-shadow: 0 0 0 4px rgba(56,189,248,0.1); }
+
+  .insight-pill {
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .insight-critical { background: #fff1f2; color: #9f1239; border: 1px solid #fecdd3; }
+  .insight-growth { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  .insight-significant { background: #fffbeb; color: #92400e; border: 1px solid #fef3c7; }
+
+  /* Chart.js overrides */
+  canvas { width: 100% !important; height: 100% !important; }
+</style>
+
+<div class="main-content with-sidebar analytics-workspace">
+  <div class="workspace-padding" style="max-width: 1200px; margin: 0 auto;">
+    
+    <div class="analytics-header animate-fade-in">
+      <div>
+        <h1>Analytics Intelligence Hub</h1>
+        <p>Strategic workforce insights and alumni ecosystem metrics.</p>
+      </div>
+      <button id="downloadAllBtn" class="pro-button midnight">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        Download All Intelligence
+      </button>
+    </div>
+
+    <%- include('../partials/flashData') %>
+
+    <!-- Metric Dashboard -->
+    <div class="metric-grid animate-fade-in" style="animation-delay: 0.1s;">
+      <div class="metric-tile blue">
+        <div class="label">Total Alumni Tracked</div>
+        <div class="value"><%= summary.totalAlumni %></div>
+        <div class="icon-bg">👥</div>
+      </div>
+      <div class="metric-tile indigo">
+        <div class="label">Unique Employers</div>
+        <div class="value"><%= summary.totalEmployers %></div>
+        <div class="icon-bg">🏢</div>
+      </div>
+      <div class="metric-tile emerald">
+        <div class="label">Independent Certs</div>
+        <div class="value"><%= summary.totalCerts %></div>
+        <div class="icon-bg">📜</div>
+      </div>
+    </div>
+
+    <!-- Smart Filters -->
+    <div class="analytics-card animate-fade-in" style="animation-delay: 0.2s; padding: 32px 48px;">
+      <form method="GET" action="/analytics/charts" style="display:flex; gap:24px; align-items:center; flex-wrap: wrap;">
+        <div class="input-group">
+          <label style="font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block; padding-left: 4px;">Programme Filter</label>
+          <select name="programme" class="pro-select">
+            <option value="">All Disciplines</option>
+            <% const programmes = ['Computer Science', 'Business Management', 'Fine Arts', 'Mechanical Engineering', 'Data Science', 'Nursing']; %>
+            <% programmes.forEach(p => { %>
+              <option value="<%= p %>" <%= query.programme === p ? 'selected' : '' %>><%= p %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="input-group">
+          <label style="font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block; padding-left: 4px;">Graduation Year</label>
+          <select name="year" class="pro-select" style="min-width: 140px;">
+            <option value="">All Eras</option>
+            <% for(let y = new Date().getFullYear(); y >= 2010; y--) { %>
+              <option value="<%= y %>" <%= query.year == y ? 'selected' : '' %>><%= y %></option>
+            <% } %>
+          </select>
+        </div>
+        <div style="display:flex; gap: 12px; margin-top: 22px;">
+          <button type="submit" class="pro-button midnight">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            Refine Intelligence
+          </button>
+          <a href="/analytics/charts" class="pro-button outline">Reset</a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Hero Chart: Graduation Trends -->
+    <div class="analytics-card animate-fade-in" style="animation-delay: 0.3s;">
+      <div class="chart-header">
+        <div class="chart-title-area">
+          <h3>Graduate Outcomes Over Time</h3>
+          <p>Analyzing the velocity of alumni graduation volume.</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <span class="insight-pill insight-growth">📈 Growth Trend</span>
+          <button id="dl_gradChart" class="pro-button outline" style="padding: 8px 16px; font-size: 12px;">📥 Export</button>
+        </div>
+      </div>
+      <div class="chart-container" style="height: 380px;"><canvas id="gradChart"></canvas></div>
+    </div>
+
+    <!-- Intelligence Grid -->
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;">
+      
+      <!-- Industry Sectors -->
+      <div class="analytics-card">
+        <div class="chart-header">
+          <div class="chart-title-area">
+            <h3>Market Presence</h3>
+            <p>Industry sector distribution.</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="insight-pill insight-critical">Critical</span>
+            <button id="dl_sectorChart" class="pro-button outline" style="padding: 6px 12px; font-size: 11px;">📥 PNG</button>
+          </div>
+        </div>
+        <div class="chart-container"><canvas id="sectorChart"></canvas></div>
+      </div>
+
+      <!-- Top Employers -->
+      <div class="analytics-card">
+        <div class="chart-header">
+          <div class="chart-title-area">
+            <h3>Enterprise Partners</h3>
+            <p>Top hiring organizations.</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="insight-pill insight-significant">Significant</span>
+            <button id="dl_employerChart" class="pro-button outline" style="padding: 6px 12px; font-size: 11px;">📥 PNG</button>
+          </div>
+        </div>
+        <div class="chart-container"><canvas id="employerChart"></canvas></div>
+      </div>
+
+      <!-- Common Roles -->
+      <div class="analytics-card">
+        <div class="chart-header">
+          <div class="chart-title-area">
+            <h3>Workforce Identity</h3>
+            <p>Primary career trajectories.</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="insight-pill insight-significant">Significant</span>
+            <button id="dl_jobChart" class="pro-button outline" style="padding: 6px 12px; font-size: 11px;">📥 PNG</button>
+          </div>
+        </div>
+        <div class="chart-container"><canvas id="jobChart"></canvas></div>
+      </div>
+
+      <!-- Geographic Distribution -->
+      <div class="analytics-card">
+        <div class="chart-header">
+          <div class="chart-title-area">
+            <h3>Global Footprint</h3>
+            <p>Geographic alumni density.</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="insight-pill insight-growth">Emerging</span>
+            <button id="dl_geoChart" class="pro-button outline" style="padding: 6px 12px; font-size: 11px;">📥 PNG</button>
+          </div>
+        </div>
+        <div class="chart-container"><canvas id="geoChart"></canvas></div>
+      </div>
+
+      <!-- Certification Growth -->
+      <div class="analytics-card">
+        <div class="chart-header">
+          <div class="chart-title-area">
+            <h3>Skills Acquisition</h3>
+            <p>Certification growth velocity.</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="insight-pill insight-critical">Critical</span>
+            <button id="dl_certTrendChart" class="pro-button outline" style="padding: 6px 12px; font-size: 11px;">📥 PNG</button>
+          </div>
+        </div>
+        <div class="chart-container"><canvas id="certTrendChart"></canvas></div>
+      </div>
+
+      <!-- Skills Radar -->
+      <div class="analytics-card">
+        <div class="chart-header">
+          <div class="chart-title-area">
+            <h3>Competency Radar</h3>
+            <p>Independent skill verification.</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span id="skillsGapBadge" class="insight-pill">Analyzing...</span>
+            <button id="dl_skillsRadarChart" class="pro-button outline" style="padding: 6px 12px; font-size: 11px;">📥 PNG</button>
+          </div>
+        </div>
+        <div class="chart-container"><canvas id="skillsRadarChart"></canvas></div>
+      </div>
+
+      <!-- Programme Distribution (Polar) -->
+      <div class="analytics-card" style="grid-column: span 2;">
+        <div class="chart-header">
+          <div class="chart-title-area">
+            <h3>Programme Intelligence</h3>
+            <p>Alumni distribution across academic disciplines.</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="insight-pill insight-growth">Emerging</span>
+            <button id="dl_programmeChart" class="pro-button outline" style="padding: 6px 12px; font-size: 11px;">📥 PNG</button>
+          </div>
+        </div>
+        <div class="chart-container" style="height: 400px;"><canvas id="programmeChart"></canvas></div>
+      </div>
+
+      <!-- Employer Concentration (Horizontal) -->
+      <div class="analytics-card" style="grid-column: span 2;">
+        <div class="chart-header">
+          <div class="chart-title-area">
+            <h3>Enterprise Concentration</h3>
+            <p>Density of alumni within specific corporate structures.</p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span class="insight-pill insight-significant">Significant</span>
+            <button id="dl_employerConcentrationChart" class="pro-button outline" style="padding: 6px 12px; font-size: 11px;">📥 PNG</button>
+          </div>
+        </div>
+        <div class="chart-container" style="height: 400px;"><canvas id="employerConcentrationChart"></canvas></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+<script>
+  // Global Analytics Diagnostic
+  console.log('Intelligence Engine: Initializing System Core...');
+
+  // Engine Initialization
+  document.addEventListener('DOMContentLoaded', () => {
+    // PDF Export Protocol - Compiles all charts into a single professional document
+    async function handleDownloadAll() {
+      const btn = document.getElementById('downloadAllBtn');
+      if (!btn) return;
+
+      // Robust Library Detection
+      let lib = window.jspdf || window.jsPDF;
+      if (!lib) {
+        alert('System Alert: The intelligence export library is still initializing. Please wait 3-5 seconds and try again.');
+        return;
+      }
+      
+      const jsPDF = lib.jsPDF || lib;
+      const canvases = document.querySelectorAll('canvas');
+      if (canvases.length === 0) return alert('System Alert: Intelligence data is still synchronizing...');
+      
+      const originalText = btn.innerHTML;
+      
+      try {
+        btn.innerHTML = '🪄 Generating PDF Report...';
+        btn.disabled = true;
+
+        // Create PDF in Portrait, points, A4 size
+        const pdf = new jsPDF('p', 'pt', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const margin = 40;
+        const contentWidth = pdfWidth - (margin * 2);
+
+        // Add Report Header
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(24);
+        pdf.setTextColor(15, 23, 42); 
+        pdf.text("Analytics Intelligence Report", margin, 60);
+        
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "normal");
+        pdf.setTextColor(100, 116, 139);
+        pdf.text(`Generated on: ${new Date().toLocaleString()}`, margin, 80);
+        pdf.text("Strategic workforce insights and alumni ecosystem metrics.", margin, 95);
+        
+        pdf.setDrawColor(226, 232, 240);
+        pdf.line(margin, 110, pdfWidth - margin, 110);
+
+        let currentY = 140;
+
+        for (let i = 0; i < canvases.length; i++) {
+          const canvas = canvases[i];
+          const imgData = canvas.toDataURL('image/png', 1.0);
+          
+          const imgProps = pdf.getImageProperties(imgData);
+          const imgWidth = contentWidth;
+          const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+
+          if (currentY + imgHeight + 40 > pdfHeight) {
+            pdf.addPage();
+            currentY = margin;
+          }
+
+          const card = canvas.closest('.analytics-card');
+          const title = card ? card.querySelector('h3')?.innerText : `Intelligence Module ${i + 1}`;
+          
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(14);
+          pdf.setTextColor(15, 23, 42);
+          pdf.text(title, margin, currentY);
+          currentY += 20;
+
+          pdf.addImage(imgData, 'PNG', margin, currentY, imgWidth, imgHeight, undefined, 'FAST');
+          currentY += imgHeight + 40;
+        }
+        
+        pdf.save(`Alumni_Intelligence_Report_${new Date().getTime()}.pdf`);
+        btn.innerHTML = '✅ PDF Exported';
+      } catch (e) {
+        console.error('Intelligence Engine: PDF Protocol Error:', e);
+        btn.innerHTML = '❌ Export Failed';
+        alert('System Error: Could not generate PDF. Please try again.');
+      } finally {
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }, 3000);
+      }
+    }
+
+    const downloadBtn = document.getElementById('downloadAllBtn');
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', handleDownloadAll);
+      console.log('Intelligence Engine: Download Listener Bound.');
+    }
+
+    // Chart.js Global Standard
+    Chart.defaults.color = '#64748b';
+    Chart.defaults.borderColor = '#f1f5f9';
+    Chart.defaults.font.family = "'Inter', -apple-system, sans-serif";
+    Chart.defaults.font.size = 12;
+    Chart.defaults.font.weight = '600';
+    Chart.defaults.animation = { duration: 1500, easing: 'easeOutQuart' };
+
+    fetch('/api/v1/analytics/charts-data' + window.location.search)
+      .then(res => res.json())
+      .then(response => {
+        if (!response.success || !response.data) return;
+        const rawData = response.data;
+
+        const badge = document.getElementById('skillsGapBadge');
+        if (badge && rawData.skillsGap) {
+          const maxVal = Math.max(...rawData.skillsGap.map(d => d.count), 0);
+          if (maxVal > 15) { badge.textContent = 'Critical Gap'; badge.className = 'insight-pill insight-critical'; }
+          else if (maxVal > 5) { badge.textContent = 'Significant'; badge.className = 'insight-pill insight-significant'; }
+          else { badge.textContent = 'Stable'; badge.className = 'insight-pill insight-growth'; }
+        }
+
+        const colors = ['#0f172a', '#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
+        const tooltipConfig = {
+          backgroundColor: '#0f172a', padding: 16,
+          titleFont: { size: 14, weight: '800' }, bodyFont: { size: 13 },
+          cornerRadius: 12, boxPadding: 8
+        };
+
+        const createChart = (id, type, dataArray, label, extra = {}) => {
+          const canvas = document.getElementById(id);
+          if (!canvas || !dataArray) return;
+          const isHorizontal = extra.indexAxis === 'y';
+          return new Chart(canvas, {
+            type,
+            data: {
+              labels: dataArray.map(r => r.label || r.name || 'Unknown'),
+              datasets: [{ 
+                label, data: dataArray.map(r => r.count), 
+                backgroundColor: ['doughnut', 'pie', 'polarArea'].includes(type) ? colors : (extra.backgroundColor || colors[1]), 
+                borderRadius: 12, ...extra 
+              }]
+            },
+            options: {
+              indexAxis: isHorizontal ? 'y' : 'x', responsive: true, maintainAspectRatio: false,
+              plugins: { tooltip: tooltipConfig, legend: { display: ['doughnut', 'pie', 'polarArea'].includes(type), position: 'bottom' } },
+              scales: ['doughnut', 'pie', 'radar', 'polarArea'].includes(type) ? {} : { 
+                y: { beginAtZero: !isHorizontal, grid: { borderDash: [5,5] } },
+                x: { beginAtZero: isHorizontal, grid: { display: false } }
+              }
+            }
+          });
+        };
+
+        // Render All Modules
+        if (rawData.grads) {
+          new Chart(document.getElementById('gradChart'), {
+            type: 'line',
+            data: {
+              labels: rawData.grads.map(r => r.label),
+              datasets: [{
+                label: 'Graduates', data: rawData.grads.map(r => r.count),
+                borderColor: '#0f172a', backgroundColor: 'rgba(15, 23, 42, 0.05)',
+                fill: true, tension: 0.4, borderWidth: 3, pointBackgroundColor: '#fff',
+                pointBorderColor: '#0f172a', pointBorderWidth: 2, pointRadius: 6, pointHoverRadius: 8
+              }]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: { tooltip: tooltipConfig, legend: { display: false } },
+              scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } }, x: { grid: { display: false } } }
+            }
+          });
+        }
+
+        createChart('sectorChart', 'doughnut', rawData.sector, 'Alumni', { cutout: '75%', borderWidth: 4, borderColor: '#fff' });
+        createChart('employerChart', 'bar', rawData.employers, 'Employees');
+        createChart('jobChart', 'bar', rawData.jobs, 'Alumni', { indexAxis: 'y' });
+        createChart('geoChart', 'pie', rawData.geo, 'Alumni', { borderWidth: 4, borderColor: '#fff' });
+        createChart('certTrendChart', 'line', rawData.certTrends, 'Certs', { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 });
+        
+        if (rawData.skillsGap) {
+          new Chart(document.getElementById('skillsRadarChart'), {
+            type: 'radar',
+            data: {
+              labels: rawData.skillsGap.map(r => r.name),
+              datasets: [{
+                label: 'Verifications', data: rawData.skillsGap.map(r => r.count),
+                borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.15)',
+                borderWidth: 3, pointRadius: 4, pointBackgroundColor: '#8b5cf6'
+              }]
+            },
+            options: {
+              responsive: true, maintainAspectRatio: false,
+              plugins: { tooltip: tooltipConfig, legend: { display: false } },
+              scales: { r: { ticks: { display: false }, grid: { color: '#e2e8f0' }, angleLines: { color: '#e2e8f0' } } }
+            }
+          });
+        }
+
+        createChart('programmeChart', 'polarArea', rawData.programmes, 'Graduates', { backgroundColor: colors.map(c => c + '80') });
+        createChart('employerConcentrationChart', 'bar', rawData.employers, 'Alumni', { indexAxis: 'y', backgroundColor: colors[2] });
+
+        // Bind Individual Exports
+        document.querySelectorAll('[id^="dl_"]').forEach(btn => {
+          btn.onclick = () => {
+            const canvasId = btn.id.replace('dl_', '');
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = `intelligence_export_${canvasId}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+          };
+        });
+      })
+      .catch(err => console.error('Intelligence Engine: Sync Failure:', err));
+  });
+</script>
+
+<%- include('../partials/footer') %>
