@@ -1,23 +1,4 @@
 // index.js - main entry point
-// 
-// APPLICATION ARCHITECTURE (Express MVC with SSR)
-// ================================================
-// This is a Server-Side Rendered (SSR) web application using the MVC pattern:
-//   - Models:      /models/*.js (Sequelize ORM → MySQL)
-//   - Views:       /views/**/*.ejs (EJS templates)
-//   - Controllers: /controllers/*/index.js (loaded by lib/boot.js)
-//   - Routes:      /routes/*.js (Express Router files for API endpoints)
-//
-// MIDDLEWARE PIPELINE (order matters for security):
-//   1. Helmet (security headers: X-Frame-Options, CSP, etc.)
-//   2. CORS (restricts origins to APP_URL only)
-//   3. Rate Limiter (100 req/15min general, 10 req/15min for auth)
-//   4. Body Parser (urlencoded + JSON)
-//   5. XSS Sanitisation (strips < > from all string inputs)
-//   6. Session (express-session with httpOnly, sameSite cookies)
-//   7. CSRF Protection (single-use rotating tokens)
-//   8. Route Handlers (auth, profiles, bids, API)
-//
 'use strict'
 
 require('dotenv').config();
@@ -46,10 +27,6 @@ connectDB();
 require('./models/index');
 
 // Security headers via Helmet
-// CSP configured to allow:
-//   - Chart.js from JSDelivr CDN (for analytics charts)
-//   - Inline scripts (required for EJS template data injection into Chart.js)
-//   - Swagger UI resources from unpkg CDN
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -113,7 +90,7 @@ app.use(session({
   }
 }));
 
-// csrf protection middleware
+// CSRF protection using rotating tokens
 var csrfProtection = require('./middleware/csrf');
 app.use(csrfProtection);
 

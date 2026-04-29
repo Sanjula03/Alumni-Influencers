@@ -1,27 +1,6 @@
-// cron jobs - automated daily winner selection and appearance tracking
-//
-// BLIND BIDDING WINNER SELECTION ALGORITHM
-// ==========================================
-// This module implements two scheduled cron jobs:
-//
-// 1. DAILY WINNER SELECTION (runs at 6 PM every day)
-//    Algorithm:
-//    a) Fetch all bids for today with status = 'pending', sorted by amount DESC
-//    b) The highest bidder wins (bids[0]) — this is a sealed-bid auction
-//    c) Winner's bid is marked as 'won', all others as 'lost'
-//    d) A FeaturedAlumni record is created for TOMORROW's date
-//    e) Win/lose notification emails are sent to all bidders
-//
-//    KEY DESIGN DECISIONS:
-//    - "Blind" means bidders cannot see each other's amounts (enforced in bidRoutes.js)
-//    - Winner is determined by highest amount (simple max — no randomisation)
-//    - Featured date is TOMORROW, not today (gives time for AR app to cache)
-//    - Monthly limit (3 wins max) is enforced at BID PLACEMENT time, not here
-//
-// 2. MONTHLY RESET (runs at midnight on the 1st of each month)
-//    - Does NOT delete any data — monthly wins are calculated dynamically
-//    - Logs a summary of the previous month's winners for auditing
-//
+// cron jobs for automated daily winner selection
+// runs at 6 PM daily to select tomorrows Alumni of the Day
+// also handles monthly reporting/auditing
 const cron = require('node-cron');
 const { Op } = require('sequelize');
 const Bid = require('../models/Bid');
@@ -136,8 +115,8 @@ const initCronJobs = () => {
     }
   });
 
-  console.log('Cron job scheduled: Daily winner selection at midnight');
-  console.log('Cron job scheduled: Monthly appearance count reset on 1st');
+  console.log('Cron job scheduled: Daily winner selection at 6 PM');
+  console.log('Cron job scheduled: Monthly summary reporting on the 1st');
 };
 
 module.exports = { initCronJobs };

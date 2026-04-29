@@ -1,23 +1,7 @@
 // controllers/bids/index.js
-//
-// BIDDING CONTROLLER (MVC Pattern — SSR)
-// =======================================
-// This controller handles the Server-Side Rendered bidding page.
-// It queries all bidding data and passes it to the bids/index.ejs view.
-//
-// The bidding system is a "sealed-bid" (blind) auction:
-//   - Alumni place bids each day for tomorrow's featured slot
-//   - No one can see anyone else's bid amounts
-//   - Users only receive "winning" or "losing" feedback
-//   - A cron job (cronJobs.js) selects the winner at 6 PM daily
-//
-// DATA FLOW:
-// 1. User visits GET /bids
-// 2. Controller queries: today's bid, blind status, monthly wins, featured alumni
-// 3. View renders the full bidding dashboard with forms
-// 4. POST /bids/place → places or increases a bid (form submit → redirect)
-// 5. POST /bids/cancel → cancels today's bid (form submit → redirect)
-//
+// Handles the bidding dashboard and placement logic (SSR)
+// Implements blind bidding where users only see win/loss status
+
 var { isAuthenticated, requireRole } = require('../../middleware/auth');
 var { Op } = require('sequelize');
 var Bid = require('../../models/Bid');
@@ -202,7 +186,7 @@ exports.placeBid = async function(req, res) {
     if (amount > totalSponsorship) {
       res.message({ 
         type: 'error', 
-        text: 'Insufficient sponsorship funds. Your total budget from endorsements is £' + totalSponsorship.toFixed(2) 
+        text: 'The bid amount exceeds your available sponsorship balance. Current balance: £' + totalSponsorship.toFixed(2) 
       });
       return res.redirect('/bids');
     }

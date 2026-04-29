@@ -1,24 +1,6 @@
 // controllers/analytics/index.js
-// 
-// ANALYTICS CONTROLLER (MVC Pattern)
-// ====================================
-// This controller handles the Data Visualization & Charts page.
-// It executes 8 different SQL aggregate queries against the database, 
-// then passes the results to the charts.ejs view for client-side rendering.
-//
-// ARCHITECTURE DECISION: Why Raw SQL Instead of Sequelize?
-// - Complex GROUP BY aggregations with JOINs are cleaner in raw SQL
-// - Sequelize's aggregate functions don't support multi-table JOINs well
-// - Raw queries give us full control over performance (LIMIT, indexing)
-// - Parameterised queries (?) prevent SQL injection just as effectively
-//
-// DATA FLOW:
-// 1. User visits /analytics/charts (with optional filter query params)
-// 2. This controller builds a dynamic WHERE clause from the filters
-// 3. 8 SQL queries run in parallel against profiles, employment_history, certifications
-// 4. Results are passed to charts.ejs as JSON
-// 5. Chart.js on the client renders 9 interactive charts (8 datasets)
-//
+// Handles analytics and data visualization charts
+// Fetches aggregate data via raw SQL for better performance on JOINs
 var { isAuthenticated } = require('../../middleware/auth');
 var { sequelize } = require('../../db');
 

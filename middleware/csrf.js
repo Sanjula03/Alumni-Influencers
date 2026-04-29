@@ -1,26 +1,12 @@
 // middleware/csrf.js
-// Cross-Site Request Forgery protection middleware.
-//
-// HOW IT WORKS:
-// 1. On every GET request, a unique CSRF token is generated and stored in the session.
-// 2. The token is passed to every EJS view via res.locals.csrfToken.
-// 3. Every form includes <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-// 4. On POST/PUT/DELETE, we verify the submitted _csrf matches the session token.
-// 5. AFTER successful verification, we ROTATE the token (generate a new one).
-//    This makes each token single-use, preventing replay attacks.
-//
-// WHY ROTATE?
-// A static CSRF token can be captured and reused for the entire session.
-// Rotating after each use means even if an attacker captures a token,
-// it's already invalidated by the time they try to use it.
+// Custom CSRF protection using rotating tokens.
+// Generates tokens for GET requests and verifies them on POST/PUT/DELETE.
+// Tokens are single-use (rotated) for better security.
 
 var crypto = require('crypto');
 
 /**
- * Generates a cryptographically random 24-byte CSRF token.
- * Uses crypto.randomBytes() which is a CSPRNG (Cryptographically Secure
- * Pseudo-Random Number Generator) — required by the marking rubric.
- * @returns {string} 48-character hex token
+ * CSRF token generation using crypto.randomBytes (CSPRNG)
  */
 function generateCsrfToken() {
   return crypto.randomBytes(24).toString('hex');

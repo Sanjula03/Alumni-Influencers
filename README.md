@@ -1,6 +1,32 @@
-# Alumni Influencers API
+# University Analytics Dashboard
+*Alumni Influencers Application*
 
-REST API for the Alumni Influencers platform. Built with Express.js and MySQL for the Advanced Server-Side Web Development coursework.
+This project has been upgraded to a **Server-Side Rendered (SSR) MVC Architecture** utilizing EJS templates, matching the required boilerplate specifications.
+
+## Key Features Implemented
+1. **Premium Dashboard UI:** Complete Vanilla CSS + EJS Layouts.
+2. **8 Interactive Charts:** Data aggregated on backend via Sequelize `GROUP BY` and passed instantly to Chart.js.
+3. **Advanced Filtering:** Alumni and Charts can be filtered by `programme`, `graduation_year`, and `industry_sector`.
+4. **Data Export:** Generate CSV and PDF reports via `/export` endpoint.
+5. **API Key Management:** UI explicitly designed for Scoped API Keys (e.g. `read:alumni`).
+6. **Security Hardened:** Includes a robust CSRF verification token system alongside the existing security measures (Bcrypt, Helmet, Rate Limiting).
+
+## Quick Start Configuration
+
+```bash
+# 1. Install Dependencies
+npm install
+
+# 2. Database Setup
+# Configure your `.env` to match your local MySQL credentials.
+# Then run the seeder script, which will drop tables, recreate them, and insert 100 fake profiles for the charts.
+node utils/seedData.js
+
+# 3. Start Server
+npm run dev
+```
+
+> **Default Admin Login:** `admin@westminster.ac.uk` / `password123`
 
 ## Tech Stack
 
