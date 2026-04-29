@@ -80,6 +80,17 @@ Interactive Swagger docs available at: `http://localhost:3000/api-docs`
 - `POST /profile` - Create or update profile
 - `DELETE /profile/entry/:type/:id` - Delete a sub-entry (degree, certification, etc.)
 
+### Dashboard & Analytics
+- `GET /dashboard` - Main summary dashboard with metrics
+- `GET /dashboard/alumni` - Searchable alumni directory with filtering
+- `GET /analytics/charts` - View 8 interactive data visualizations (SSR)
+- `GET /api/v1/analytics/charts-data` - Fetch raw chart data via API
+
+### Data Export
+- `GET /export` - Access the data export hub
+- `POST /export/csv` - Generate and download CSV report
+- `POST /export/pdf` - Generate and download PDF report
+
 ### Bidding System
 - `GET /bids` - View bidding dashboard (SSR)
 - `POST /bid` - Place or update bid via API
