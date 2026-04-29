@@ -7,7 +7,7 @@ async function setupVerification() {
 
   try {
     // 1. Create a Test Sponsor (Client)
-    const sponsorEmail = 'sponsor@westminster.ac.uk';
+    const sponsorEmail = 'sponsor@eastminster.ac.uk';
     let sponsor = await User.findOne({ where: { email: sponsorEmail } });
     
     if (!sponsor) {
@@ -17,14 +17,14 @@ async function setupVerification() {
         role: 'sponsor',
         is_verified: true
       });
-      console.log('✅ Created Sponsor Account: sponsor@westminster.ac.uk / password123');
+      console.log('✅ Created Sponsor Account: sponsor@eastminster.ac.uk / password123');
     } else {
       await sponsor.update({ role: 'sponsor', is_verified: true });
       console.log('✅ Updated existing Sponsor Account');
     }
 
     // 2. Create a Test Alumnus (Influencer)
-    const alumnusEmail = 'alumnus@westminster.ac.uk';
+    const alumnusEmail = 'alumnus@eastminster.ac.uk';
     let alumnus = await User.findOne({ where: { email: alumnusEmail } });
 
     if (!alumnus) {
@@ -34,7 +34,7 @@ async function setupVerification() {
         role: 'alumnus',
         is_verified: true
       });
-      console.log('✅ Created Alumnus Account: alumnus@westminster.ac.uk / password123');
+      console.log('✅ Created Alumnus Account: alumnus@eastminster.ac.uk / password123');
     }
 
     // 3. Setup Alumnus Profile & Course
@@ -81,8 +81,8 @@ async function setupVerification() {
     }
 
     console.log('\n--- Setup Complete ---');
-    console.log('1. Log in as SPONSOR (sponsor@westminster.ac.uk) to "Explore Network" and offer sponsorships.');
-    console.log('2. Log in as ALUMNUS (alumnus@westminster.ac.uk) to "Dashboard" to accept offers.');
+    console.log('1. Log in as SPONSOR (sponsor@eastminster.ac.uk) to "Explore Network" and offer sponsorships.');
+    console.log('2. Log in as ALUMNUS (alumnus@eastminster.ac.uk) to "Dashboard" to accept offers.');
     console.log('3. Visit "Bidding Hub" as Alumnus to see your budget grow!');
     
     process.exit(0);

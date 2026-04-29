@@ -258,6 +258,10 @@
           <div class="section-title">Career Milestones</div>
           <div id="modalExperience"></div>
         </div>
+        <div>
+          <div class="section-title">Professional Endorsements</div>
+          <div id="modalEndorsements"></div>
+        </div>
       </div>
 
       <div style="margin-top: 40px; display: flex; justify-content: center;">
@@ -267,9 +271,12 @@
   </div>
 </div>
 
+<script id="alumni-data" type="application/json"><%- JSON.stringify(profiles) %></script>
+
 <script>
   (function() {
-    const alumniData = <%- JSON.stringify(profiles) %>;
+    const alumniData = JSON.parse(document.getElementById('alumni-data').textContent);
+    const userRole = '<%= user ? user.role : "" %>';
     const modal = document.getElementById('alumniModal');
     const tableBody = document.getElementById('alumniTableBody');
 
@@ -279,7 +286,7 @@
 
       document.getElementById('modalName').textContent = profile.first_name + ' ' + profile.last_name;
       document.getElementById('modalHeadline').textContent = (profile.programme || 'Alumnus') + ' • Class of ' + (profile.graduation_year || '-');
-      document.getElementById('modalBio').textContent = profile.biography || 'This alumnus is an active and inspiring member of our global Westminster network.';
+      document.getElementById('modalBio').textContent = profile.biography || 'This alumnus is an active and inspiring member of our global Eastminster network.';
       
       const imgContainer = document.getElementById('modalImgContainer');
       if (profile.profile_image) {
@@ -299,44 +306,59 @@
       });
       if (!profile.degrees?.length) eduDiv.innerHTML = '<p style="font-size:13px; color:#94a3b8; font-style:italic;">Academic history not provided.</p>';
 
-      // 2. Professional Credentials & Courses
+      // 2. Career Milestones (Employment)
       const expDiv = document.getElementById('modalExperience');
       expDiv.innerHTML = '';
+      (profile.employmentHistory || []).forEach(job => {
+        expDiv.innerHTML += `
+          <div class="history-item" style="border-left: 4px solid #0f172a;">
+            <div style="font-weight:900; font-size:16px; color:var(--text-main);">${job.role}</div>
+            <div style="font-size:14px; color:#6366f1; margin-top:4px; font-weight: 700;">${job.company}</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-top:8px; font-weight: 600;">
+              ${job.start_date} — ${job.is_current ? 'Present' : (job.end_date || 'N/A')}
+            </div>
+          </div>`;
+      });
+      if (!profile.employmentHistory?.length) expDiv.innerHTML = '<p style="font-size:13px; color:#94a3b8; font-style:italic;">No employment history listed.</p>';
 
-      const renderSection = (title, items, type, color, bodyField) => {
+      // 3. Professional Endorsements (Sponsorable)
+      const endDiv = document.getElementById('modalEndorsements');
+      endDiv.innerHTML = '';
+
+      const renderSection = (title, items, type, color, bodyField, targetDiv) => {
         if (!items || items.length === 0) return;
         
-        let html = `<div style="margin-top:40px;"><div class="section-title">${title}</div><div style="display:grid; gap:16px;">`;
+        let html = `<div style="margin-top:20px;"><div style="font-size:10px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:16px;">${title}</div><div style="display:grid; gap:12px;">`;
         
         items.forEach(item => {
           let sponsorHtml = '';
-          <% if (user && user.role === 'sponsor') { %>
+          if (userRole === 'sponsor') {
             sponsorHtml = `
               <button class="btn sponsorship-trigger" 
                       data-alumnus="${profile.user_id}"
                       data-type="${type}"
                       data-id="${item.id}"
                       data-name="${item.name.replace(/"/g, '&quot;')}"
-                      style="background:linear-gradient(135deg, ${color} 0%, #000 100%); color:white; font-size:11px; font-weight:700; padding:8px 20px; border-radius:100px; margin-top:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-                Offer Sponsorship
+                      style="background:linear-gradient(135deg, ${color} 0%, #000 100%); color:white; font-size:10px; font-weight:700; padding:8px 20px; border-radius:100px; margin-top:12px; border:none; cursor:pointer;">
+                Offer Endorsement
               </button>`;
-          <% } %>
+          }
 
           html += `
-            <div class="history-item" style="border-left: 4px solid ${color};">
-              <div style="font-weight:900; font-size:16px; color:var(--text-main);">${item.name}</div>
-              <div style="font-size:13px; color:var(--text-muted); margin-top:6px; font-weight: 500;">${item[bodyField]}</div>
+            <div class="history-item" style="border-left: 3px solid ${color}; padding: 16px; margin-bottom: 0;">
+              <div style="font-weight:800; font-size:14px; color:var(--text-main);">${item.name}</div>
+              <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">${item[bodyField]}</div>
               ${sponsorHtml}
             </div>`;
         });
         
         html += `</div></div>`;
-        expDiv.innerHTML += html;
+        targetDiv.innerHTML += html;
       };
 
-      renderSection('Professional Certifications', profile.certifications, 'certification', '#6366f1', 'issuing_body');
-      renderSection('Professional Licences', profile.licences, 'licence', '#10b981', 'awarding_body');
-      renderSection('Specialized Courses', profile.courses, 'course', '#f59e0b', 'provider');
+      renderSection('Certifications', profile.certifications, 'certification', '#6366f1', 'issuing_body', endDiv);
+      renderSection('Licences', profile.licences, 'licence', '#10b981', 'awarding_body', endDiv);
+      renderSection('Short Courses', profile.courses, 'course', '#f59e0b', 'provider', endDiv);
 
       // Attach Listeners to Sponsorship Buttons
       document.querySelectorAll('.sponsorship-trigger').forEach(btn => {
@@ -347,7 +369,7 @@
       });
 
       if (!profile.certifications?.length && !profile.licences?.length && !profile.courses?.length) {
-        expDiv.innerHTML = '<p style="font-size:13px; color:#94a3b8; font-style:italic;">No professional endorsements currently listed.</p>';
+        endDiv.innerHTML = '<p style="font-size:13px; color:#94a3b8; font-style:italic;">No professional endorsements currently listed.</p>';
       }
 
       const linkedin = document.getElementById('modalLinkedin');

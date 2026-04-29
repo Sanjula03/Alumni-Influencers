@@ -1,4 +1,4 @@
-// swagger.js - api documentation setup
+// swagger documentation setup for API endpoints
 var swaggerJsdoc = require('swagger-jsdoc');
 
 var options = {
@@ -37,7 +37,7 @@ var options = {
           type: 'object',
           properties: {
             id: { type: 'integer', example: 1 },
-            email: { type: 'string', example: 'w1234567@my.westminster.ac.uk' },
+            email: { type: 'string', example: 'w1234567@my.eastminster.ac.uk' },
             is_verified: { type: 'boolean', example: true },
             created_at: { type: 'string', format: 'date-time' },
             updated_at: { type: 'string', format: 'date-time' }
@@ -151,6 +151,12 @@ var options = {
           properties: {
             id: { type: 'integer' },
             client_name: { type: 'string', example: 'AR Mobile App' },
+            permissions: {
+              type: 'array',
+              items: { type: 'string' },
+              example: ['read:alumni_of_day'],
+              description: 'Scoped permission list. Available: read:alumni, read:analytics, read:alumni_of_day, write:bids'
+            },
             is_revoked: { type: 'boolean', example: false },
             last_used_at: { type: 'string', format: 'date-time', nullable: true },
             created_at: { type: 'string', format: 'date-time' }
@@ -703,7 +709,7 @@ var options = {
         get: {
           tags: ['Public API'],
           summary: 'Get todays featured alumnus',
-          description: 'Returns the profile of todays featured alumnus including all qualifications and employment history. Requires a valid bearer token.',
+          description: 'Returns the profile of todays featured alumnus. **Requires `read:alumni_of_day` permission scope.** A token with only `read:alumni` or `read:analytics` will receive a 403 Forbidden response. This enforces the scoping table: Analytics Dashboard keys (read:alumni, read:analytics) cannot access this endpoint; only Mobile AR App keys (read:alumni_of_day) can.',
           security: [{ BearerAuth: [] }],
           responses: {
             '200': { description: 'Featured alumnus data', content: { 'application/json': { schema: {
@@ -730,8 +736,52 @@ var options = {
               }
             }}}},
             '401': { description: 'Missing or invalid bearer token', content: { 'application/json': { schema: { '$ref': '#/components/schemas/Error' } } } },
-            '403': { description: 'Token revoked', content: { 'application/json': { schema: { '$ref': '#/components/schemas/Error' } } } },
+            '403': {
+              description: 'Token revoked OR insufficient permissions',
+              content: { 'application/json': { schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: false },
+                  error: { type: 'string', example: "Access denied. This token does not have the 'read:alumni_of_day' permission." },
+                  requiredPermission: { type: 'string', example: 'read:alumni_of_day' },
+                  yourPermissions: { type: 'array', items: { type: 'string' }, example: ['read:alumni', 'read:analytics'] }
+                }
+              }}}
+            },
             '404': { description: 'No featured alumnus today', content: { 'application/json': { schema: { '$ref': '#/components/schemas/Error' } } } }
+          }
+        }
+      },
+      '/api/v1/analytics/charts-data': {
+        get: {
+          tags: ['Analytics'],
+          summary: 'Get dashboard chart data',
+          description: 'Returns aggregated analytics data for the dashboard charts.',
+          security: [{ SessionAuth: [] }],
+          parameters: [
+            { name: 'programme', in: 'query', required: false, schema: { type: 'string' } },
+            { name: 'year', in: 'query', required: false, schema: { type: 'string' } },
+            { name: 'sector', in: 'query', required: false, schema: { type: 'string' } }
+          ],
+          responses: {
+            '200': { description: 'Analytics data payload', content: { 'application/json': { schema: {
+              type: 'object', properties: {
+                success: { type: 'boolean', example: true },
+                data: {
+                  type: 'object', properties: {
+                    skillsGap: { type: 'array', items: { type: 'object' } },
+                    sector: { type: 'array', items: { type: 'object' } },
+                    jobs: { type: 'array', items: { type: 'object' } },
+                    employers: { type: 'array', items: { type: 'object' } },
+                    geo: { type: 'array', items: { type: 'object' } },
+                    grads: { type: 'array', items: { type: 'object' } },
+                    certTrends: { type: 'array', items: { type: 'object' } },
+                    programmes: { type: 'array', items: { type: 'object' } }
+                  }
+                }
+              }
+            }}}},
+            '401': { description: 'Unauthorized', content: { 'application/json': { schema: { '$ref': '#/components/schemas/Error' } } } }
           }
         }
       }
