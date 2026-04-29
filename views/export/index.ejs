@@ -231,10 +231,10 @@
       <p>Configure custom parameters for executive alumni reports.</p>
     </div>
     <div style="display: flex; gap: 12px;">
-      <button type="button" onclick="loadPreset()" class="btn-pro secondary" style="padding: 10px 20px; font-size: 12px;">
+      <button type="button" id="loadPresetBtn" class="btn-pro secondary" style="padding: 10px 20px; font-size: 12px;">
         📂 Load Preset
       </button>
-      <button type="button" onclick="savePreset()" class="btn-pro secondary" style="padding: 10px 20px; font-size: 12px; border-color: var(--accent-blue); color: var(--accent-blue);">
+      <button type="button" id="savePresetBtn" class="btn-pro secondary" style="padding: 10px 20px; font-size: 12px; border-color: var(--accent-blue); color: var(--accent-blue);">
         💾 Save Current
       </button>
     </div>
@@ -301,11 +301,11 @@
         </div>
 
         <div class="action-grid">
-          <button type="submit" onclick="document.getElementById('exportForm').action='/export/csv';" class="btn-pro secondary">
+          <button type="submit" formaction="/export/csv" class="btn-pro secondary">
             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             Excel / CSV
           </button>
-          <button type="submit" onclick="document.getElementById('exportForm').action='/export/pdf';" class="btn-pro primary">
+          <button type="submit" formaction="/export/pdf" class="btn-pro primary">
             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
             Executive PDF
           </button>
@@ -348,40 +348,84 @@
 </div>
 
 <script>
-  function savePreset() {
-    const preset = {
-      programme: document.getElementById('filterProgramme').value,
-      year: document.getElementById('filterYear').value,
-      sector: document.getElementById('filterSector').value
+  (function() {
+    const updateDropdownUI = (inputId, val) => {
+      const input = document.getElementById(inputId);
+      if (!input) return;
+      
+      input.value = val || '';
+      const wrapper = input.closest('.custom-select-wrapper');
+      if (!wrapper) return;
+      
+      const triggerSpan = wrapper.querySelector('.custom-select-trigger span');
+      const targetOption = wrapper.querySelector(`.custom-option[data-value="${val || ''}"]`);
+      
+      if (targetOption && triggerSpan) {
+        triggerSpan.textContent = targetOption.textContent;
+        wrapper.querySelectorAll('.custom-option').forEach(o => o.classList.remove('selected'));
+        targetOption.classList.add('selected');
+      }
     };
-    localStorage.setItem('exportPreset', JSON.stringify(preset));
-    
-    const btn = document.querySelector('button[onclick="savePreset()"]');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '✨ Preset Saved';
-    btn.style.borderColor = '#10b981';
-    btn.style.color = '#10b981';
-    setTimeout(() => {
-      btn.innerHTML = originalText;
-      btn.style.borderColor = 'var(--accent-blue)';
-      btn.style.color = 'var(--accent-blue)';
-    }, 2000);
-  }
 
-  function loadPreset() {
-    const saved = localStorage.getItem('exportPreset');
-    if (!saved) { alert('System Note: No saved preset found in local storage.'); return; }
-    const preset = JSON.parse(saved);
-    document.getElementById('filterProgramme').value = preset.programme || '';
-    document.getElementById('filterYear').value = preset.year || '';
-    document.getElementById('filterSector').value = preset.sector || '';
-    
-    const btn = document.querySelector('button[onclick="loadPreset()"]');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⚡ Sync Complete';
-    setTimeout(() => btn.innerHTML = originalText, 2000);
-  }
+    const saveBtn = document.getElementById('savePresetBtn');
+    const loadBtn = document.getElementById('loadPresetBtn');
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function() {
+        try {
+          const prog = document.getElementById('filterProgramme').value;
+          const year = document.getElementById('filterYear').value;
+          const sect = document.getElementById('filterSector').value;
+          
+          const preset = { programme: prog, year: year, sector: sect };
+          localStorage.setItem('exportPreset', JSON.stringify(preset));
+          
+          const originalHTML = this.innerHTML;
+          this.innerHTML = '✅ Saved';
+          this.style.background = '#10b981';
+          this.style.color = 'white';
+          
+          setTimeout(() => {
+            this.innerHTML = originalHTML;
+            this.style.background = '';
+            this.style.color = '';
+          }, 1500);
+        } catch (e) {
+          alert('Error: Could not save your configuration.');
+        }
+      });
+    }
+
+    if (loadBtn) {
+      loadBtn.addEventListener('click', function() {
+        try {
+          const saved = localStorage.getItem('exportPreset');
+          if (!saved) { 
+            alert('No saved configuration found! Set your filters and click "Save Current" first.');
+            return; 
+          }
+          
+          const preset = JSON.parse(saved);
+          updateDropdownUI('filterProgramme', preset.programme);
+          updateDropdownUI('filterYear', preset.year);
+          updateDropdownUI('filterSector', preset.sector);
+          
+          const originalHTML = this.innerHTML;
+          this.innerHTML = '⚡ Loaded';
+          this.style.background = '#3b82f6';
+          this.style.color = 'white';
+          
+          setTimeout(() => {
+            this.innerHTML = originalHTML;
+            this.style.background = '';
+            this.style.color = '';
+          }, 1500);
+        } catch (e) {
+          alert('Error: Could not load your configuration.');
+        }
+      });
+    }
+  })();
 </script>
 
 <%- include('../partials/footer') %>
-

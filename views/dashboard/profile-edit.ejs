@@ -9,7 +9,9 @@
     </div>
     <div style="display: flex; gap: 12px;">
       <a href="/dashboard" class="btn btn-outline" style="border-radius: 100px; padding: 10px 24px; font-weight: 700;">Discard</a>
-      <button type="button" class="btn btn-primary" id="masterSaveBtn" style="border-radius: 100px; padding: 10px 32px; font-weight: 800; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);">Sync Profile</button>
+      <button type="button" class="btn btn-primary" id="masterSaveBtn" style="border-radius: 100px; padding: 10px 32px; font-weight: 800; box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);">
+        <%= profile && profile.id ? 'Sync Profile' : 'Create Profile' %>
+      </button>
     </div>
   </div>
 
@@ -69,6 +71,43 @@
           <div class="input-group full-width">
             <label>LinkedIn Professional URL</label>
             <input type="url" id="linkedInUrl" name="linkedInUrl" value="<%= profile.linkedin_url || '' %>" placeholder="https://linkedin.com/in/username" class="professional-input">
+          </div>
+          <div class="form-row-dual">
+            <div class="input-group">
+              <label>Academic Programme</label>
+              <div class="custom-select-wrapper">
+                <input type="hidden" id="programme" name="programme" value="<%= profile.programme || '' %>">
+                <div class="custom-select-trigger professional-input" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px;">
+                  <span><%= profile.programme || 'Select Programme' %></span>
+                </div>
+                <div class="custom-options">
+                  <div class="custom-options-content">
+                    <div class="custom-option <%= !profile.programme ? 'selected' : '' %>" data-value="">Select Programme</div>
+                    <% const programmes = ['Computer Science', 'Business Management', 'Fine Arts', 'Mechanical Engineering', 'Data Science', 'Nursing']; %>
+                    <% programmes.forEach(p => { %>
+                      <div class="custom-option <%= profile.programme === p ? 'selected' : '' %>" data-value="<%= p %>"><%= p %></div>
+                    <% }) %>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="input-group">
+              <label>Graduation Year</label>
+              <div class="custom-select-wrapper">
+                <input type="hidden" id="graduationYear" name="graduationYear" value="<%= profile.graduation_year || '' %>">
+                <div class="custom-select-trigger professional-input" style="display: flex; justify-content: space-between; align-items: center; padding: 16px 24px;">
+                  <span><%= profile.graduation_year || 'Select Year' %></span>
+                </div>
+                <div class="custom-options">
+                  <div class="custom-options-content">
+                    <div class="custom-option <%= !profile.graduation_year ? 'selected' : '' %>" data-value="">Select Year</div>
+                    <% for(let y = 2026; y >= 1990; y--) { %>
+                      <div class="custom-option <%= profile.graduation_year == y ? 'selected' : '' %>" data-value="<%= y %>"><%= y %></div>
+                    <% } %>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="input-group full-width">
             <label>Executive Summary / Biography</label>
@@ -136,7 +175,7 @@
         </div>
 
         <!-- Section: Education -->
-        <div class="studio-section no-border">
+        <div class="studio-section">
           <div class="section-header-row">
             <div class="section-title-area">
               <div class="section-icon-box">
@@ -158,6 +197,96 @@
                   <div class="row-field-footer">
                     <div class="input-group" style="flex: 2;"><label>Credential URL</label><input type="url" class="d-url professional-input" value="<%= deg.url %>"></div>
                     <div class="input-group" style="flex: 1;"><label>Completion Date</label><input type="date" class="d-date professional-input" value="<%= deg.completion_date ? deg.completion_date.split('T')[0] : '' %>"></div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Section: Certifications -->
+        <div class="studio-section">
+          <div class="section-header-row">
+            <div class="section-title-area">
+              <div class="section-icon-box">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+              </div>
+              <h2>Professional Certifications</h2>
+            </div>
+            <button type="button" class="btn btn-outline small-pill" id="addCertBtn">+ Add Cert</button>
+          </div>
+          <div id="certContainer" class="dynamic-rows-wrapper">
+            <% if (profile.certifications && profile.certifications.length > 0) { %>
+              <% profile.certifications.forEach((cert, index) => { %>
+                <div class="professional-row cert-row animate-fade-in">
+                  <button type="button" class="row-remove-btn">✕</button>
+                  <div class="row-field-grid">
+                    <div class="input-group"><label>Certification Name</label><input type="text" class="c-name professional-input" value="<%= cert.name %>"></div>
+                    <div class="input-group"><label>Issuing Body</label><input type="text" class="c-body professional-input" value="<%= cert.issuing_body %>"></div>
+                  </div>
+                  <div class="row-field-footer">
+                    <div class="input-group" style="flex: 2;"><label>Validation URL</label><input type="url" class="c-url professional-input" value="<%= cert.url %>"></div>
+                    <div class="input-group" style="flex: 1;"><label>Completion Date</label><input type="date" class="c-date professional-input" value="<%= cert.completion_date ? cert.completion_date.split('T')[0] : '' %>"></div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Section: Licences -->
+        <div class="studio-section">
+          <div class="section-header-row">
+            <div class="section-title-area">
+              <div class="section-icon-box">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              </div>
+              <h2>Professional Licences</h2>
+            </div>
+            <button type="button" class="btn btn-outline small-pill" id="addLicenceBtn">+ Add Licence</button>
+          </div>
+          <div id="licenceContainer" class="dynamic-rows-wrapper">
+            <% if (profile.licences && profile.licences.length > 0) { %>
+              <% profile.licences.forEach((lic, index) => { %>
+                <div class="professional-row licence-row animate-fade-in">
+                  <button type="button" class="row-remove-btn">✕</button>
+                  <div class="row-field-grid">
+                    <div class="input-group"><label>Licence Title</label><input type="text" class="l-name professional-input" value="<%= lic.name %>"></div>
+                    <div class="input-group"><label>Awarding Body</label><input type="text" class="l-body professional-input" value="<%= lic.awarding_body %>"></div>
+                  </div>
+                  <div class="row-field-footer">
+                    <div class="input-group" style="flex: 2;"><label>Credential Link</label><input type="url" class="l-url professional-input" value="<%= lic.url %>"></div>
+                    <div class="input-group" style="flex: 1;"><label>Issue Date</label><input type="date" class="l-date professional-input" value="<%= lic.completion_date ? lic.completion_date.split('T')[0] : '' %>"></div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Section: Courses -->
+        <div class="studio-section no-border">
+          <div class="section-header-row">
+            <div class="section-title-area">
+              <div class="section-icon-box">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+              </div>
+              <h2>Specialized Courses</h2>
+            </div>
+            <button type="button" class="btn btn-outline small-pill" id="addCourseBtn">+ Add Course</button>
+          </div>
+          <div id="courseContainer" class="dynamic-rows-wrapper">
+            <% if (profile.courses && profile.courses.length > 0) { %>
+              <% profile.courses.forEach((course, index) => { %>
+                <div class="professional-row course-row animate-fade-in">
+                  <button type="button" class="row-remove-btn">✕</button>
+                  <div class="row-field-grid">
+                    <div class="input-group"><label>Course Title</label><input type="text" class="co-name professional-input" value="<%= course.name %>"></div>
+                    <div class="input-group"><label>Provider</label><input type="text" class="co-provider professional-input" value="<%= course.provider %>"></div>
+                  </div>
+                  <div class="row-field-footer">
+                    <div class="input-group" style="flex: 2;"><label>Course URL</label><input type="url" class="co-url professional-input" value="<%= course.url %>"></div>
+                    <div class="input-group" style="flex: 1;"><label>Completion Date</label><input type="date" class="co-date professional-input" value="<%= course.completion_date ? course.completion_date.split('T')[0] : '' %>"></div>
                   </div>
                 </div>
               <% }) %>
@@ -190,6 +319,17 @@ document.addEventListener('DOMContentLoaded', function() {
     uploadTriggerBtn.addEventListener('click', function() {
       profileImageInput.click();
     });
+
+    // Smart URL helper for LinkedIn
+    const linkedinInput = document.getElementById('linkedInUrl');
+    if (linkedinInput) {
+      linkedinInput.addEventListener('blur', function() {
+        let val = this.value.trim();
+        if (val && !val.startsWith('http://') && !val.startsWith('https://')) {
+          this.value = 'https://' + val;
+        }
+      });
+    }
 
     profileImageInput.addEventListener('change', function() {
       if (this.files && this.files[0]) {
@@ -247,6 +387,66 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  const addCertBtn = document.getElementById('addCertBtn');
+  if (addCertBtn) {
+    addCertBtn.addEventListener('click', function() {
+      const container = document.getElementById('certContainer');
+      const html = `
+        <div class="professional-row cert-row animate-fade-in">
+          <button type="button" class="row-remove-btn">✕</button>
+          <div class="row-field-grid">
+            <div class="input-group"><label>Certification Name</label><input type="text" class="c-name professional-input" placeholder="e.g. AWS Solutions Architect"></div>
+            <div class="input-group"><label>Issuing Body</label><input type="text" class="c-body professional-input" placeholder="e.g. Amazon Web Services"></div>
+          </div>
+          <div class="row-field-footer">
+            <div class="input-group" style="flex: 2;"><label>Validation URL</label><input type="url" class="c-url professional-input" placeholder="Credential link"></div>
+            <div class="input-group" style="flex: 1;"><label>Completion Date</label><input type="date" class="c-date professional-input"></div>
+          </div>
+        </div>`;
+      container.insertAdjacentHTML('beforeend', html);
+    });
+  }
+
+  const addLicenceBtn = document.getElementById('addLicenceBtn');
+  if (addLicenceBtn) {
+    addLicenceBtn.addEventListener('click', function() {
+      const container = document.getElementById('licenceContainer');
+      const html = `
+        <div class="professional-row licence-row animate-fade-in">
+          <button type="button" class="row-remove-btn">✕</button>
+          <div class="row-field-grid">
+            <div class="input-group"><label>Licence Title</label><input type="text" class="l-name professional-input" placeholder="e.g. Registered Architect"></div>
+            <div class="input-group"><label>Awarding Body</label><input type="text" class="l-body professional-input" placeholder="e.g. AIA"></div>
+          </div>
+          <div class="row-field-footer">
+            <div class="input-group" style="flex: 2;"><label>Credential Link</label><input type="url" class="l-url professional-input" placeholder="Link"></div>
+            <div class="input-group" style="flex: 1;"><label>Issue Date</label><input type="date" class="l-date professional-input"></div>
+          </div>
+        </div>`;
+      container.insertAdjacentHTML('beforeend', html);
+    });
+  }
+
+  const addCourseBtn = document.getElementById('addCourseBtn');
+  if (addCourseBtn) {
+    addCourseBtn.addEventListener('click', function() {
+      const container = document.getElementById('courseContainer');
+      const html = `
+        <div class="professional-row course-row animate-fade-in">
+          <button type="button" class="row-remove-btn">✕</button>
+          <div class="row-field-grid">
+            <div class="input-group"><label>Course Title</label><input type="text" class="co-name professional-input" placeholder="e.g. Leadership Masterclass"></div>
+            <div class="input-group"><label>Provider</label><input type="text" class="co-provider professional-input" placeholder="e.g. Harvard Online"></div>
+          </div>
+          <div class="row-field-footer">
+            <div class="input-group" style="flex: 2;"><label>Course URL</label><input type="url" class="co-url professional-input" placeholder="Link"></div>
+            <div class="input-group" style="flex: 1;"><label>Completion Date</label><input type="date" class="co-date professional-input"></div>
+          </div>
+        </div>`;
+      container.insertAdjacentHTML('beforeend', html);
+    });
+  }
+
   // 4. EVENT DELEGATION FOR DELETE & TOGGLE
   document.addEventListener('click', function(e) {
     // Row Removal
@@ -290,6 +490,8 @@ document.addEventListener('DOMContentLoaded', function() {
       formData.append('lastName', document.getElementById('lastName').value);
       formData.append('linkedInUrl', document.getElementById('linkedInUrl').value);
       formData.append('biography', document.getElementById('biography').value);
+      formData.append('programme', document.getElementById('programme').value);
+      formData.append('graduationYear', document.getElementById('graduationYear').value);
 
       const imageFile = document.getElementById('profileImage').files[0];
       if (imageFile) formData.append('profileImage', imageFile);
@@ -322,6 +524,48 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
       formData.append('degrees', JSON.stringify(degrees));
+
+      const certifications = [];
+      document.querySelectorAll('.cert-row').forEach(row => {
+        const name = row.querySelector('.c-name').value;
+        if (name) {
+          certifications.push({
+            name: name,
+            issuingBody: row.querySelector('.c-body').value,
+            url: row.querySelector('.c-url').value,
+            completionDate: row.querySelector('.c-date').value
+          });
+        }
+      });
+      formData.append('certifications', JSON.stringify(certifications));
+
+      const licences = [];
+      document.querySelectorAll('.licence-row').forEach(row => {
+        const name = row.querySelector('.l-name').value;
+        if (name) {
+          licences.push({
+            name: name,
+            awardingBody: row.querySelector('.l-body').value,
+            url: row.querySelector('.l-url').value,
+            completionDate: row.querySelector('.l-date').value
+          });
+        }
+      });
+      formData.append('licences', JSON.stringify(licences));
+
+      const courses = [];
+      document.querySelectorAll('.course-row').forEach(row => {
+        const name = row.querySelector('.co-name').value;
+        if (name) {
+          courses.push({
+            name: name,
+            provider: row.querySelector('.co-provider').value,
+            url: row.querySelector('.co-url').value,
+            completionDate: row.querySelector('.co-date').value
+          });
+        }
+      });
+      formData.append('courses', JSON.stringify(courses));
 
       try {
         const res = await fetch('/profile', { 

@@ -135,27 +135,44 @@
     </div>
 
     <!-- Smart Filters -->
-    <div class="analytics-card animate-fade-in" style="animation-delay: 0.2s; padding: 32px 48px;">
+    <div class="analytics-card animate-fade-in" style="animation-delay: 0.2s; padding: 32px 48px; overflow: visible !important; position: relative; z-index: 100;">
       <form method="GET" action="/analytics/charts" style="display:flex; gap:24px; align-items:center; flex-wrap: wrap;">
-        <div class="input-group">
+        <div class="input-group" style="min-width: 240px;">
           <label style="font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block; padding-left: 4px;">Programme Filter</label>
-          <select name="programme" class="pro-select">
-            <option value="">All Disciplines</option>
-            <% const programmes = ['Computer Science', 'Business Management', 'Fine Arts', 'Mechanical Engineering', 'Data Science', 'Nursing']; %>
-            <% programmes.forEach(p => { %>
-              <option value="<%= p %>" <%= query.programme === p ? 'selected' : '' %>><%= p %></option>
-            <% }) %>
-          </select>
+          <div class="custom-select-wrapper">
+            <input type="hidden" name="programme" value="<%= query.programme || '' %>">
+            <div class="custom-select-trigger">
+              <span><%= query.programme || 'All Disciplines' %></span>
+            </div>
+            <div class="custom-options">
+              <div class="custom-options-content">
+                <div class="custom-option <%= !query.programme ? 'selected' : '' %>" data-value="">All Disciplines</div>
+                <% const programmes = ['Computer Science', 'Business Management', 'Fine Arts', 'Mechanical Engineering', 'Data Science', 'Nursing']; %>
+                <% programmes.forEach(p => { %>
+                  <div class="custom-option <%= query.programme === p ? 'selected' : '' %>" data-value="<%= p %>"><%= p %></div>
+                <% }) %>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="input-group">
+        <div class="input-group" style="min-width: 180px;">
           <label style="font-size: 10px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block; padding-left: 4px;">Graduation Year</label>
-          <select name="year" class="pro-select" style="min-width: 140px;">
-            <option value="">All Eras</option>
-            <% for(let y = new Date().getFullYear(); y >= 2010; y--) { %>
-              <option value="<%= y %>" <%= query.year == y ? 'selected' : '' %>><%= y %></option>
-            <% } %>
-          </select>
+          <div class="custom-select-wrapper">
+            <input type="hidden" name="year" value="<%= query.year || '' %>">
+            <div class="custom-select-trigger">
+              <span><%= query.year || 'All Eras' %></span>
+            </div>
+            <div class="custom-options">
+              <div class="custom-options-content">
+                <div class="custom-option <%= !query.year ? 'selected' : '' %>" data-value="">All Eras</div>
+                <% for(let y = new Date().getFullYear(); y >= 2010; y--) { %>
+                  <div class="custom-option <%= query.year == y ? 'selected' : '' %>" data-value="<%= y %>"><%= y %></div>
+                <% } %>
+              </div>
+            </div>
+          </div>
         </div>
+
         <div style="display:flex; gap: 12px; margin-top: 22px;">
           <button type="submit" class="pro-button midnight">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>

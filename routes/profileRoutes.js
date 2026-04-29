@@ -129,7 +129,7 @@ router.get('/profile/:profile_id', async function(req, res) {
 // POST /profile - create or update profile
 router.post('/profile', isAuthenticated, upload.single('profileImage'), async function(req, res) {
   try {
-    var { firstName, lastName, biography, linkedInUrl } = req.body;
+    var { firstName, lastName, biography, linkedInUrl, programme, graduationYear } = req.body;
     var { degrees, certifications, licences, courses, employmentHistory } = req.body;
 
     // Helper to parse JSON strings if needed (for AJAX compatibility)
@@ -158,6 +158,8 @@ router.post('/profile', isAuthenticated, upload.single('profileImage'), async fu
         last_name: lastName,
         biography: biography || null,
         linkedin_url: linkedInUrl || null,
+        programme: programme || null,
+        graduation_year: graduationYear || null,
         profile_image: req.file ? '/uploads/' + req.file.filename : profile.profile_image
       });
     } else {
@@ -167,6 +169,8 @@ router.post('/profile', isAuthenticated, upload.single('profileImage'), async fu
         last_name: lastName,
         biography: biography || null,
         linkedin_url: linkedInUrl || null,
+        programme: programme || null,
+        graduation_year: graduationYear || null,
         profile_image: req.file ? '/uploads/' + req.file.filename : null
       });
     }

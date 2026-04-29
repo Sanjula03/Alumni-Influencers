@@ -19,6 +19,7 @@ exports.index = async function (req, res) {
     const totalCertifications = await Certification.count();
 
     const user = await User.findByPk(req.session.userId);
+    const profile = await Profile.findOne({ where: { user_id: req.session.userId } });
 
     // Fetch pending sponsorship offers for this alumnus - Requirement 2
     const { SponsorshipOffer } = require('../../models');
@@ -40,7 +41,7 @@ exports.index = async function (req, res) {
     }
 
     res.render('dashboard/index', {
-      user: { email: user.email, role: user.role },
+      user: { email: user.email, role: user.role, profile },
       metrics: {
         totalAlumni,
         activeUsers,
